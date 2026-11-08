@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "effective": "2026-10-29 to 2026-12-24",
+  "runtime_center_and_heading_match_retained_FAA_polygon": true,
+  "published_length_metres": 1676.4,
+  "published_width_metres": 30.48,
+  "projected_centerline_metres": 1678.721669754723,
+  "note": "Runtime uses published dimensions, polygon center/heading, and the existing local terrain projection. Geometry is not survey-grade."
+}

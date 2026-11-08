@@ -32,6 +32,10 @@ Public Sub BeginFlight(ByVal automatic As Boolean)
     If Demo Then Scenario = 1
     ResetFlight Scenario
     frmMenu.Hide: MenuOpen = False
+    frmFlight.StartUpPosition = 0
+    frmFlight.Left = Application.Left: frmFlight.Top = Application.Top
+    frmFlight.Width = Application.Width
+    frmFlight.Height = Application.Height
     frmFlight.Show vbModeless
     DoEvents
     InitRenderer FindWindow(vbNullString, "Meridian | Excel Flight Simulator")
@@ -77,7 +81,7 @@ Public Sub BeginFlight(ByVal automatic As Boolean)
         End If
     Loop
 cleanup:
-    Running = False: Call StopAudio: CloseRenderer
+    Running = False: Call StopAudio: StopMenuAudio: CloseRenderer
     If logOpened Then Close #logFile
     TestFlightSeconds = 0
     Unload frmFlight
@@ -101,7 +105,7 @@ Public Sub StopSimulator()
     Running = False
 End Sub
 Public Sub EmergencyCleanup()
-    Running = False: Call StopAudio: CloseRenderer
+    Running = False: Call StopAudio: StopMenuAudio: CloseRenderer
     Unload frmFlight: Unload frmMenu
     Application.StatusBar = False
 End Sub

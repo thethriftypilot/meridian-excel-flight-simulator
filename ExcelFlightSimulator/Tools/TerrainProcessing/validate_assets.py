@@ -16,10 +16,14 @@ for name,digest in m['sha256'].items():
 h=np.fromfile(p/'height.bin',dtype='<f4').reshape(1024,1024)
 check('finite DEM',bool(np.isfinite(h).all()),f'Min {h.min():.3f}, max {h.max():.3f} m; negative quarry/low-area samples retained')
 check('missing data',bool((h!=-999999).all()),'No requested no-data sentinel present')
-head=math.radians(141)
-e=-838.2*math.sin(head); n=-838.2*math.cos(head)
+runway=json.loads((root/'Assets/Airports/KFCI-runway.json').read_text(encoding='utf-8-sig'))['features'][0]
+ring=runway['geometry']['rings'][0]
+lon=(ring[1][0]+ring[2][0])/2; lat=(ring[1][1]+ring[2][1])/2
+correction=math.cos(math.radians(37.4065))
+e=math.radians(lon+77.5248333333)*6378137*correction
+n=(math.log(math.tan(math.pi/4+math.radians(lat)/2))-math.log(math.tan(math.pi/4+math.radians(37.4065)/2)))*6378137*correction
 elev=float(h[int((10240-n)/20),int((10240+e)/20)])
-check('FAA northwest field elevation',abs(elev-236*.3048)<3,f'Nearest DEM threshold sample {elev:.3f} m; dated FAA field elevation 71.933 m')
+check('FAA northwest field elevation',abs(elev-236*.3048)<3,f'Nearest DEM threshold sample {elev:.3f} m; FAA 29 October 2026 field elevation 71.933 m')
 for name in ['elevation.tif.json','imagery_0_0.jpg.json','imagery_0_1.jpg.json','imagery_1_0.jpg.json','imagery_1_1.jpg.json']:
     r=json.loads((p/name).read_text())
     check(name+' export', 'extent' in r and 'error' not in r, 'Export extent and success metadata retained')

@@ -9,15 +9,9 @@ End Sub
 Public Sub SaveFrame(ByVal path As String)
     Dim data() As Long, info As BITMAPINFOHEADER, bmp As LongPtr, f As Integer, scratch As LongPtr, rows As Long
     Dim fileSize As Long, offset As Long, zero As Integer, signature As String * 2
-    ReDim data(0 To 699999)
+    CapturePixels data
     info.biSize = 40: info.biWidth = 1000: info.biHeight = -700
     info.biPlanes = 1: info.biBitCount = 32: info.biSizeImage = 2800000
-    bmp = GetCurrentObject(Canvas, 7)
-    scratch = CreateCompatibleBitmap(Canvas, 1, 1)
-    SelectObject Canvas, scratch
-    rows = GetDIBits(Canvas, bmp, 0, 700, data(0), info, 0)
-    SelectObject Canvas, bmp: DeleteObject scratch
-    If rows = 0 Then Err.Raise 5, , "Frame capture failed"
     f = FreeFile: fileSize = 2800054: offset = 54: signature = "BM"
     Open path For Binary Access Write As #f
     Put #f, , signature: Put #f, , fileSize: Put #f, , zero: Put #f, , zero: Put #f, , offset
@@ -37,6 +31,7 @@ Public Function RunSelfTests() As String
     Check "C Cached hillshade", UBound(TerrainShade) = 1048575 And TerrainShade(0) >= 0.68 And TerrainShade(0) <= 1.15, "Resident lighting cache available"
     Check "C Terrain", UBound(Heights) = 1048575 And UBound(Colors) = 16777215, "DEM and texture binary lengths validated"
     Check "N Geography", Abs(Latitude(0) - 37.4065) < 0.000001 And Abs(Longitude(0) + 77.5248333333) < 0.000001, "Projection origin round trip"
+    Check "L Memory API", WorkingSetMB() > 0, "Native process working-set counters available"
     Check "N Runway", OnRunway(0, 0) And Not OnRunway(2000, 2000), "1676.4 x 30.48 m footprint"
     SetWeather 0: ResetFlight 0
     Plane.throttle = 1
@@ -88,6 +83,17 @@ Public Function RunSelfTests() As String
     ResetFlight 1: SetWeather 0
     For i = 1 To 120: StepFlight 1# / 60: Next
     Check "Weather ground track", Abs(replay - Plane.east - 8) < 0.1, "4 m/s east wind changes position 8 m in 2 s"
+    ResetFlight 1: Plane.fuel = 0
+    For i = 1 To 600: StepFlight 1# / 60: Next
+    Check "E Fuel exhaustion", Not Plane.engineRunning And Plane.rpm < 1 And Plane.oilPressure < 1, "Engine cannot regenerate idle RPM after empty tank"
+    ResetFlight 1: Plane.engineRunning = False: first = Plane.fuel
+    For i = 1 To 120: StepFlight 1# / 60: Next
+    Check "E Engine shutdown", Plane.fuel = first And Plane.rpm < 120, "No fuel burn and RPM decays when engine is off"
+    Check "G Building collision", HitsAirportBuilding(RunwayEast(-180, -235), RunwayNorth(-180, -235), 0) And Not HitsAirportBuilding(RunwayEast(-180, -235), RunwayNorth(-180, -235), 500), "Generalized hangars collide below roof, clear overhead"
+    ResetFlight 1: SetWeather 2
+    Check "N Groundspeed", Abs(GroundSpeedKnots() - Plane.speed * 1.94384) > 1, "Wind affects groundspeed indication"
+    SetWeather 6
+    Check "Weather rain", Visibility = 2800 And Turbulence > 0 And WindEast <> 0, "Rain preset changes visibility, wind, turbulence, drawing and audio"
     Sensitivity = 0.8: Volume = 0.35: Quality = 1
     before = GetGuiResources(GetCurrentProcess(), 0)
     For j = 1 To 3
@@ -97,6 +103,8 @@ Public Function RunSelfTests() As String
         t = Clock(): Call RenderFrame: Present
         Check "B/J Launch " & j, Canvas <> 0, "Native UserForm, terrain and cockpit presented"
         If j = 1 Then
+            CheckInstrumentBindings
+            Check "J Depth occlusion", CheckDepthRaster(), "Far polygon cannot overwrite near polygon; nearer polygon can"
             Paused = False: Demo = False
             ClearInput
             QueueKey 87, True: QueueKey 87, False: ApplyInput 0.1
@@ -118,6 +126,10 @@ Public Function RunSelfTests() As String
             Check "D Pause", Paused, "Short P event retained"
             QueueKey 80, True: QueueKey 80, False: ApplyInput 0.1
             Check "D Resume", Not Paused, "Second P resumes"
+            QueueKey 69, True: QueueKey 69, False: ApplyInput 0.1
+            Check "D Engine off", Not Plane.engineRunning, "E cuts engine"
+            QueueKey 69, True: QueueKey 69, False: ApplyInput 0.1
+            Check "D Engine restart", Plane.engineRunning, "E restarts with fuel available"
             ResetFlight 1: ClearInput
             SaveFrame ThisWorkbook.Path & "\Tests\scenic.bmp"
             t = Clock(): renderSum = 0: panelSum = 0
@@ -150,19 +162,26 @@ Public Function RunSelfTests() As String
             ResetFlight 1: SetWeather 0: CameraMode = 0: Plane.bank = 0.35: Plane.pitch = 0.12: Plane.vertical = 3
             Call RenderFrame: SaveFrame ThisWorkbook.Path & "\Tests\banked-cockpit.bmp"
             CameraMode = 4: Call RenderFrame: SaveFrame ThisWorkbook.Path & "\Tests\instruments.bmp"
-            For weatherIndex = 0 To 5
+            For weatherIndex = 0 To 6
                 SetWeather weatherIndex
                 For cameraIndex = 0 To 4
                     CameraMode = cameraIndex: Call RenderFrame: Present
                 Next
             Next
-            Check "H Camera/weather matrix", True, "All 5 views x 6 weather presets rendered; banked cockpit and instrument captures saved"
+            Check "H Camera/weather matrix", True, "All 5 views x 7 weather presets rendered; banked cockpit and instrument captures saved"
+            ResetFlight 6: Plane.heading = RunwayHeading + PI: CameraMode = 1: SetWeather 0
+            Call RenderFrame: SaveFrame ThisWorkbook.Path & "\Tests\airport.bmp"
+            ResetFlight 1: CameraMode = 2: Call RenderFrame: SaveFrame ThisWorkbook.Path & "\Tests\aircraft.bmp"
+            CameraMode = 0: SetWeather 6: Call RenderFrame: SaveFrame ThisWorkbook.Path & "\Tests\rain.bmp"
             SetWeather 0: Call StartAudio: t = Clock()
             Do While Clock() - t < 2
                 Plane.throttle = (Clock() - t) / 2: Plane.rpm = 700 + Plane.throttle * 2000
                 Call UpdateAudio: DoEvents: Sleep 10
             Loop
             Check "I Audio", AudioBuffers > 12, AudioStatus & "; synthesized buffers=" & AudioBuffers
+            Check "I Menu audio", PlayMenuClick(), "Original WAV accepted by asynchronous PlaySoundW"
+            StopMenuAudio
+            Check "I Audio events", AudioCueCount > 0, "Startup and touchdown cues reached original PCM mixer"
             StopAudio
         End If
         Call CloseRenderer: Unload frmFlight: DoEvents
@@ -170,7 +189,7 @@ Public Function RunSelfTests() As String
     after = GetGuiResources(GetCurrentProcess(), 0)
     Check "K GDI cleanup", after - before < 12, "3 cycles: before=" & before & " after=" & after & "; includes Office UserForm cache"
     results = results & "PARTIAL | D Physical controls | Queued native control tests passed if reported above; UI pause/resume checked separately; sustained physical piloting not fully tested" & vbCrLf
-    results = results & "NOT TESTED | H Instruments | Numeric bindings implemented; visual inspection recorded separately" & vbCrLf
+    results = results & "PARTIAL | H Instruments | All 13 displayed bindings checked through framebuffer changes; independent calibration against aircraft data not performed" & vbCrLf
 done:
     f = FreeFile
     Open ThisWorkbook.Path & "\Tests\results.txt" For Output As #f
@@ -182,3 +201,52 @@ failed:
     Call StopAudio: Call CloseRenderer: Unload frmFlight
     Resume done
 End Function
+
+Private Sub CapturePixels(ByRef data() As Long)
+    Dim info As BITMAPINFOHEADER, bmp As LongPtr, scratch As LongPtr, rows As Long
+    ReDim data(0 To 699999)
+    info.biSize = 40: info.biWidth = 1000: info.biHeight = -700
+    info.biPlanes = 1: info.biBitCount = 32: info.biSizeImage = 2800000
+    bmp = GetCurrentObject(Canvas, 7)
+    scratch = CreateCompatibleBitmap(Canvas, 1, 1)
+    SelectObject Canvas, scratch
+    rows = GetDIBits(Canvas, bmp, 0, 700, data(0), info, 0)
+    SelectObject Canvas, bmp: DeleteObject scratch
+    If rows = 0 Then Err.Raise 5, , "Frame capture failed"
+End Sub
+Private Function RegionChanged(ByRef before() As Long, ByRef after() As Long, ByVal x As Long, ByVal y As Long, ByVal width As Long, ByVal height As Long) As Boolean
+    Dim xx As Long, yy As Long, changes As Long
+    For yy = y To y + height - 1
+        For xx = x To x + width - 1
+            If before(xx + yy * 1000) <> after(xx + yy * 1000) Then changes = changes + 1
+        Next
+    Next
+    RegionChanged = changes > 8
+End Function
+Private Sub CheckInstrumentBindings()
+    Dim saved As AircraftState, baseline() As Long, changed() As Long, i As Long, x As Long, y As Long, w As Long, h As Long
+    Dim label As String
+    ResetFlight 1: SetWeather 0: CameraMode = 0: Plane.vertical = 0: Plane.bank = 0: Plane.turnRate = 0: Plane.slip = 0
+    saved = Plane: Call RenderFrame: CapturePixels baseline
+    For i = 0 To 12
+        Plane = saved: w = 130: h = 130
+        Select Case i
+            Case 0: label = "Airspeed": Plane.speed = 35: x = 20: y = 405
+            Case 1: label = "Attitude": Plane.bank = 0.35: Plane.pitch = 0.15: x = 175: y = 405
+            Case 2: label = "Altimeter": Plane.altitude = 1000: x = 330: y = 405
+            Case 3: label = "Vertical speed": Plane.vertical = 5: x = 330: y = 545
+            Case 4: label = "Heading": Plane.heading = 2: x = 175: y = 545
+            Case 5: label = "Turn coordinator": Plane.turnRate = 0.05236: x = 35: y = 590: w = 100: h = 30
+            Case 6: label = "Slip": Plane.slip = 0.8: x = 40: y = 620: w = 90: h = 16
+            Case 7: label = "Tachometer": Plane.rpm = 2700: x = 485: y = 405
+            Case 8: label = "Fuel": Plane.fuel = 40: x = 650: y = 496: w = 150: h = 22
+            Case 9: label = "Oil temperature": Plane.oilTemp = 105: x = 650: y = 550: w = 150: h = 25
+            Case 10: label = "Oil pressure": Plane.oilPressure = 10: x = 740: y = 550: w = 150: h = 25
+            Case 11: label = "Flaps": Plane.flaps = 3: x = 650: y = 522: w = 100: h = 25
+            Case 12: label = "Magnetic compass": Plane.heading = 2: x = 415: y = 34: w = 170: h = 24
+        End Select
+        Call RenderFrame: CapturePixels changed
+        Check "H " & label, RegionChanged(baseline, changed, x, y, w, h), "Isolated state change updates the corresponding framebuffer region"
+    Next
+    Plane = saved
+End Sub

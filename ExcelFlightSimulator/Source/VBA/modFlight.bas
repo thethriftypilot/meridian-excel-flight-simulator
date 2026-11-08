@@ -23,6 +23,7 @@ Public Type AircraftState
     oilPressure As Double
     turnRate As Double
     slip As Double
+    engineRunning As Boolean
     grounded As Boolean
     crashed As Boolean
     stalled As Boolean
@@ -40,12 +41,13 @@ Public Sub SetWeather(ByVal preset As Long)
     If preset = 3 Then Visibility = 2200: Turbulence = 0.15
     If preset = 4 Then Visibility = 7000
     If preset = 5 Then Visibility = 4000: WindEast = 2: Turbulence = 0.4
+    If preset = 6 Then Visibility = 2800: WindEast = 3: WindNorth = -2: Turbulence = 0.5
 End Sub
 Public Sub ResetFlight(ByVal which As Long)
     Dim blank As AircraftState
-    Plane = blank: Scenario = which: Touchdown = 0
+    Plane = blank: Plane.engineRunning = True: Scenario = which: Touchdown = 0
     Plane.heading = RunwayHeading: Plane.fuel = 136: Plane.rpm = 700
-    Plane.east = -720 * Sin(RunwayHeading): Plane.north = -720 * Cos(RunwayHeading)
+    Plane.east = RunwayEast(-720): Plane.north = RunwayNorth(-720)
     Plane.altitude = Ground(Plane.east, Plane.north) + 1.2: Plane.grounded = True
     Plane.throttle = 0.15: Plane.trim = 0: CameraMode = 0
     Plane.oilTemp = 65
@@ -53,12 +55,12 @@ Public Sub ResetFlight(ByVal which As Long)
         Plane.east = -2200: Plane.north = -1800: Plane.altitude = 520
         Plane.speed = 53: Plane.throttle = 0.64: Plane.pitch = 0.035: Plane.grounded = False
         Plane.heading = 0.6
-    ElseIf which = 2 Then
-        Plane.east = -3300 * Sin(RunwayHeading): Plane.north = -3300 * Cos(RunwayHeading)
+    ElseIf which = 2 Or which = 7 Then
+        Plane.east = RunwayEast(-3300): Plane.north = RunwayNorth(-3300)
         Plane.altitude = 215: Plane.speed = 34: Plane.vertical = -1.8
         Plane.throttle = 0.34: Plane.flaps = 2: Plane.pitch = 0.035: Plane.grounded = False
     ElseIf which = 6 Then
-        Plane.east = 140: Plane.north = 90: Plane.altitude = Ground(140, 90) + 1.2
+        Plane.east = RunwayEast(0, -155): Plane.north = RunwayNorth(0, -155): Plane.altitude = Ground(Plane.east, Plane.north) + 1.2
     End If
     Plane.rpm = 700 + Plane.throttle * 2000
     Plane.oilPressure = 25 + Plane.rpm * 0.019
@@ -70,11 +72,15 @@ Public Sub StepFlight(ByVal dt As Double)
     If Plane.crashed Then Exit Sub
     Plane.elapsed = Plane.elapsed + dt
     wasGrounded = Plane.grounded
-    Plane.rpm = Plane.rpm + (700 + Plane.throttle * 2000 - Plane.rpm) * dt * 2
+    If Plane.fuel <= 0 Then Plane.engineRunning = False
+    If Plane.engineRunning Then
+        Plane.rpm = Plane.rpm + (700 + Plane.throttle * 2000 - Plane.rpm) * dt * 2
+    Else
+        Plane.rpm = Plane.rpm * Exp(-dt * 1.5)
+    End If
     Plane.oilTemp = Plane.oilTemp + (65 + Plane.throttle * 45 - Plane.speed * 0.12 - Plane.oilTemp) * dt / 90
-    Plane.oilPressure = Clamp(25 + Plane.rpm * 0.019 - (Plane.oilTemp - 90) * 0.08, 0, 100)
-    Plane.fuel = Clamp(Plane.fuel - (0.001 + 0.008 * Plane.throttle) * dt, 0, 136)
-    If Plane.fuel <= 0 Then Plane.throttle = 0: Plane.rpm = Plane.rpm * (1 - dt)
+    Plane.oilPressure = Clamp((25 + Plane.rpm * 0.019 - (Plane.oilTemp - 90) * 0.08) * Clamp(Plane.rpm / 700, 0, 1), 0, 100)
+    If Plane.engineRunning Then Plane.fuel = Clamp(Plane.fuel - (0.001 + 0.008 * Plane.throttle) * dt, 0, 136)
     mass = 890 + Plane.fuel * 0.72
     gamma = Atan2(Plane.vertical, Plane.speed)
     Plane.alpha = Plane.pitch - gamma
@@ -88,6 +94,7 @@ Public Sub StepFlight(ByVal dt As Double)
     If Plane.stalled Then cd = cd + 0.18
     lift = q * 15.8 * cl: drag = q * 15.8 * cd
     thrust = Plane.throttle * 119312 * 0.72 / Clamp(Plane.speed, 26, 150)
+    If Not Plane.engineRunning Then thrust = 0
     targetPitch = 0.035 + Plane.elevator * 0.35 + Plane.trim
     If Plane.grounded Then targetPitch = Clamp(Plane.elevator * 0.32 + Plane.trim, -0.02, 0.22) * Clamp(Plane.speed / 26, 0, 1)
     Plane.pitch = Plane.pitch + Clamp(targetPitch - Plane.pitch, -0.4, 0.4) * dt * 1.8
@@ -115,11 +122,13 @@ Public Sub StepFlight(ByVal dt As Double)
     If Plane.altitude <= floor Then
         If Not wasGrounded Then
             Touchdown = Abs(Plane.vertical)
+            TriggerSound 2, Clamp(Touchdown / 3.2, 0.15, 1)
             If Plane.vertical < -3.2 Or Abs(Plane.bank) > 0.2 Or Plane.pitch < -0.09 Or Plane.pitch > 0.28 Then Plane.crashed = True
             If Not OnRunway(Plane.east, Plane.north) And Plane.speed > 16 Then Plane.crashed = True
         End If
         Plane.altitude = floor: Plane.vertical = 0: Plane.grounded = True
     End If
+    If HitsAirportBuilding(Plane.east, Plane.north, Plane.altitude) Then Plane.crashed = True
     If Abs(Plane.east) > 9900 Or Abs(Plane.north) > 9900 Then Paused = True
 End Sub
 Public Sub DemoControls()
@@ -131,5 +140,12 @@ Public Sub DemoControls()
     Plane.elevator = Clamp(altitudeError * 0.002 - Plane.vertical * 0.06, -0.5, 0.5)
     Plane.throttle = Clamp(0.64 + (53 - Plane.speed) * 0.025, 0.3, 1)
     Plane.rudder = 0
-    CameraMode = (Int(Plane.elapsed / 18) Mod 3)
+    CameraMode = (Int(Plane.elapsed / 18) Mod 5)
 End Sub
+
+Public Function GroundSpeedKnots() As Double
+    Dim e As Double, n As Double
+    e = Plane.speed * Sin(Plane.heading): n = Plane.speed * Cos(Plane.heading)
+    If Not Plane.grounded Then e = e + WindEast: n = n + WindNorth
+    GroundSpeedKnots = Sqr(e * e + n * n) * 1.94384
+End Function

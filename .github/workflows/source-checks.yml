@@ -15,6 +15,8 @@ jobs:
           python-version: '3.12'
       - name: Check Python tooling syntax
         run: python -m compileall -q ExcelFlightSimulator/Tools
+      - name: Catch skipped VBA procedure calls
+        run: python ExcelFlightSimulator/Tools/Build/check_vba_source.py
       - name: Parse PowerShell build scripts
         shell: pwsh
         run: |
@@ -25,4 +27,4 @@ jobs:
             if ($parseErrors.Count) { throw ($parseErrors | Out-String) }
           }
       - name: Explain native verification requirement
-        run: Write-Output 'Native VBA compilation, rendering, audio, and flight tests require installed desktop Excel. Run Tools/Build/build.ps1 -Test locally. This workflow checks tooling syntax only.'
+        run: Write-Output 'Native VBA compilation, rendering, audio, and flight tests require installed desktop Excel. Run Tools/Build/build.ps1 -Test locally. This workflow checks tooling syntax and a VBA source guard, not native Excel execution.'

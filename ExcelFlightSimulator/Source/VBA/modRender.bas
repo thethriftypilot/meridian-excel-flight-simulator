@@ -8,6 +8,8 @@ Private buildingPanel As Boolean
 Private instrumentDC As LongPtr, instrumentBitmap As LongPtr, oldInstrument As LongPtr
 Private fonts(0 To 3) As LongPtr
 Private pixels(0 To 230399) As Long, ceiling(0 To 479) As Long
+Private inverseDepth(0 To 230399) As Single
+Public SceneryPixels As Long
 Private bmi As BITMAPINFOHEADER
 Private camE As Double, camN As Double, camAlt As Double, camYaw As Double, camPitch As Double, camBank As Double
 Private sh As Double, ch As Double, cb As Double, sb As Double
@@ -93,8 +95,11 @@ Public Sub RenderFrame(Optional ByVal menu As Boolean = False)
     Dim t As Double, p(0 To 2) As POINTAPI, i As Long, px As Double, py As Double
     t = Clock(): Camera
     RenderTerrain
-    StretchDIBits sceneDC, 0, 0, 480, 480, 0, 0, 480, 480, pixels(0), bmi, 0, SRCCOPY
+    SceneryPixels = 0
     Airport
+    DrawAirportObjects
+    If CameraMode = 2 Then DrawChaseAircraft
+    StretchDIBits sceneDC, 0, 0, 480, 480, 0, 0, 480, 480, pixels(0), bmi, 0, SRCCOPY
     Box Canvas, 0, 0, 1000, 700, RGB(115, 149, 163)
     For i = 0 To 2
         px = -600: py = -600
@@ -105,7 +110,7 @@ Public Sub RenderFrame(Optional ByVal menu As Boolean = False)
     Next
     PlgBlt Canvas, p(0), sceneDC, 0, 0, 480, 480, 0, 0, 0
     TerrainMS = (Clock() - t) * 1000: t = Clock()
-    If CameraMode = 2 Then DrawAircraft
+    If Weather = 6 Then DrawRain
     If menu Then
         Box Canvas, 0, 0, 1000, 94, RGB(12, 24, 31)
         DrawText Canvas, 40, 15, "MERIDIAN", 2, RGB(236, 239, 224)
@@ -129,6 +134,7 @@ Public Sub RenderFrame(Optional ByVal menu As Boolean = False)
 End Sub
 Private Sub RenderTerrain()
     Dim x As Long, y As Long, index As Long, c As Long, py As Long, oldY As Long
+    Dim invZ As Single
     Dim z As Double, dz As Double, ex As Double, ny As Double, dx As Double, dn As Double
     Dim ix As Long, iy As Long, tx As Long, ty As Long, h As Double, horizon As Double, projectionScale As Double
     Dim r As Long, g As Long, b As Long, fog As Double, light As Double, skyR As Long, skyG As Long, skyB As Long
@@ -136,24 +142,25 @@ Private Sub RenderTerrain()
     skyR = 174: skyG = 196: skyB = 205
     If Weather = 1 Then skyR = 234: skyG = 169: skyB = 126
     If Weather = 4 Then skyR = 18: skyG = 28: skyB = 46
-    If Weather = 3 Or Weather = 5 Then skyR = 166: skyG = 178: skyB = 181
+    If Weather = 3 Or Weather = 5 Or Weather = 6 Then skyR = 166: skyG = 178: skyB = 181
     horizon = 240 + camPitch * 300
     For y = 0 To 479
         u = Clamp((horizon - y) / 270, 0, 1)
         r = skyR * (1 - u * 0.58): g = skyG * (1 - u * 0.35): b = skyB * (1 - u * 0.12)
         rowColor = r * 65536 + g * 256 + b
         index = y * 480
-        For x = 0 To 479: pixels(index + x) = rowColor: Next
+        For x = 0 To 479: pixels(index + x) = rowColor: inverseDepth(index + x) = 0: Next
     Next
     'World-anchored clouds, projected into the same yaw/pitch camera.
-    If Weather <> 3 And Weather <> 4 Then Clouds horizon
+    If Weather = 0 Or Weather = 1 Or Weather = 2 Then DrawSun horizon
+    If Weather <> 3 And Weather <> 4 And Weather <> 5 And Weather <> 6 Then Clouds horizon
     For x = 0 To 479: ceiling(x) = 480: Next
     stride = 1: If Quality = 0 Then stride = 2
     z = 8
     'All local DEM samples are below 118 m. Skip rays above the entire terrain.
     If camAlt > 125 And horizon < 479 Then z = Clamp((camAlt - 125) * 300 / (480 - horizon), 8, Visibility)
     Do While z < Visibility
-        projectionScale = 300 / z
+        projectionScale = 300 / z: invZ = 1 / z
         ex = camE + sh * z - ch * z * 0.8
         ny = camN + ch * z + sh * z * 0.8
         dx = ch * z / 300: dn = -sh * z / 300
@@ -170,6 +177,7 @@ Private Sub RenderTerrain()
                     If z > 1500 Then c = ColorLOD1(ix + iy * 1024)
                     If z > 4500 Then c = ColorLOD2((ix \ 4) + (iy \ 4) * 256)
                     shade = TerrainShade(index)
+                    If Weather = 1 Then shade = SunsetShade(index)
                     light = shade
                     If Weather = 1 Then light = light * 0.75
                     If Weather = 4 Then light = light * 0.13
@@ -179,8 +187,10 @@ Private Sub RenderTerrain()
                     c = r * 65536 + g * 256 + b
                     If py < 0 Then py = 0
                     For y = py To oldY - 1
-                        pixels(x + y * 480) = c
-                        If stride = 2 Then pixels(x + 1 + y * 480) = c
+                        pixels(x + y * 480) = c: inverseDepth(x + y * 480) = invZ
+                        If stride = 2 Then
+                            pixels(x + 1 + y * 480) = c: inverseDepth(x + 1 + y * 480) = invZ
+                        End If
                     Next
                     ceiling(x) = py
                 End If
@@ -249,11 +259,12 @@ Private Sub GroundQuad(ByVal along As Double, ByVal lateral As Double, ByVal len
         s = along - length / 2: t = lateral - width / 2
         If i = 1 Or i = 2 Then s = along + length / 2
         If i >= 2 Then t = lateral + width / 2
-        east = Sin(RunwayHeading) * s + Cos(RunwayHeading) * t
-        north = Cos(RunwayHeading) * s - Sin(RunwayHeading) * t
+        east = RunwayEast(s, t)
+        north = RunwayNorth(s, t)
         de = east - camE: dn = north - camN
         ax(i) = de * ch - dn * sh: az(i) = de * sh + dn * ch
         ah(i) = RunwayHeight(east, north) + 0.15 - camAlt
+        If Abs(lateral) > 18 Then ah(i) = TerrainGround(east, north) + 0.15 - camAlt
     Next
     For i = 0 To 3
         j = (i + 3) Mod 4
@@ -269,12 +280,26 @@ Private Sub GroundQuad(ByVal along As Double, ByVal lateral As Double, ByVal len
         p(i).x = Clamp(240 + bx(i) * 300 / bz(i), -16000, 16000)
         p(i).y = Clamp(240 + camPitch * 300 - bh(i) * 300 / bz(i), -16000, 16000)
     Next
-    Poly sceneDC, p, n, color
+    If Weather = 4 And Abs(lateral) > 18 Then color = RGB((color And 255) * 0.15, ((color \ 256) And 255) * 0.15, ((color \ 65536) And 255) * 0.15)
+    RasterPolygon p, bz, n, color, 1.025
 End Sub
 Private Sub Airport()
-    Dim s As Double, c As Long
+    Dim s As Double, c As Long, lateral As Double
     If Sqr(camE * camE + camN * camN) > Visibility Then Exit Sub
     c = RGB(53, 57, 59): If Weather = 4 Then c = RGB(20, 23, 29)
+    'Generalized parallel taxiway and apron; native depth testing hides them behind terrain.
+    For s = -650 To 650 Step 100
+        GroundQuad s, -65, 100, 12, RGB(82, 86, 83)
+        GroundQuad s, -65, 100, 0.3, RGB(190, 163, 66)
+    Next
+    For s = -225 To 225 Step 50
+        For lateral = -215 To -95 Step 20
+            GroundQuad s, lateral, 50, 20, RGB(104, 108, 104)
+        Next
+    Next
+    For s = -600 To 600 Step 600
+        GroundQuad s, -34, 13, 62, RGB(82, 86, 83)
+    Next
     For s = -808.265 To 808.265 Step 59.87
         GroundQuad s, 0, 59.87, 30.48, c
         GroundQuad s, -14.5, 59.87, 0.5, RGB(220, 222, 204)
@@ -287,31 +312,22 @@ Private Sub Airport()
             GroundQuad s, 16, 3, 2, RGB(255, 233, 172)
         End If
     Next
+    RunwayNumber -766, 1, "1", "5"
+    RunwayNumber 766, -1, "3", "3"
     For s = -10 To 10 Step 4
         GroundQuad -800, s, 20, 1.5, RGB(225, 225, 211)
         GroundQuad 800, s, 20, 1.5, RGB(225, 225, 211)
     Next
 End Sub
 Public Sub Present()
-    Dim r As RECT
+    Dim r As RECT, w As Long, h As Long, viewScale As Double
     If SimHwnd = 0 Then Exit Sub
     GetClientRect SimHwnd, r
-    StretchBlt windowDC, 0, 0, r.Right, r.Bottom, Canvas, 0, 0, 1000, 700, SRCCOPY
-End Sub
-Private Sub DrawAircraft()
-    Dim p(0 To 7) As POINTAPI, i As Long, xx As Double, yy As Double
-    Dim coords As Variant
-    coords = Array(-5, -38, 8, -12, 110, 15, 112, 28, 9, 16, 7, 61, -8, 61, -10, 16)
-    For i = 0 To 7
-        xx = coords(i * 2): yy = coords(i * 2 + 1)
-        p(i).x = 500 + xx * Cos(Plane.bank) - yy * Sin(Plane.bank)
-        p(i).y = 335 + xx * Sin(Plane.bank) + yy * Cos(Plane.bank)
-    Next
-    Poly Canvas, p, 8, RGB(228, 229, 219)
-    For i = 0 To 7: p(i).x = 1000 - p(i).x: Next
-    Poly Canvas, p, 8, RGB(207, 214, 209)
-    DrawLine Canvas, 490, 352, 510, 352, RGB(175, 51, 35), 5
-    Disk Canvas, 500, 328, 8, RGB(46, 74, 89)
+    viewScale = r.Right / 1000
+    If r.Bottom / 700 < viewScale Then viewScale = r.Bottom / 700
+    w = CLng(1000 * viewScale): h = CLng(700 * viewScale)
+    Box windowDC, 0, 0, r.Right, r.Bottom, RGB(7, 13, 17)
+    StretchBlt windowDC, (r.Right - w) \ 2, (r.Bottom - h) \ 2, w, h, Canvas, 0, 0, 1000, 700, SRCCOPY
 End Sub
 Private Sub DrawHUD()
     Box Canvas, 0, 0, 1000, 34, RGB(13, 26, 32)
@@ -320,6 +336,7 @@ Private Sub DrawHUD()
     DrawText Canvas, 690, 8, Format(FPS, "0.0") & " FPS  |  " & IIf(Demo, "DEMONSTRATION", "MANUAL FLIGHT")
     Box Canvas, 414, 34, 172, 24, RGB(15, 28, 34)
     DrawText Canvas, 429, 39, "COMPASS " & Format(Wrap(Plane.heading + 10 * PI / 180) * 180 / PI, "000") & " M", 0, RGB(232, 217, 163)
+    If Not Plane.engineRunning Then DrawText Canvas, 25, 65, "ENGINE OFF / E RESTART", 0, RGB(255, 175, 80)
     If Plane.stalled Then DrawText Canvas, 410, 65, "STALL", 2, RGB(255, 127, 66)
     If Plane.speed > 82 Then DrawText Canvas, 390, 65, "OVERSPEED", 2, RGB(255, 127, 66)
     If CameraMode <> 0 And CameraMode <> 4 Then
@@ -446,7 +463,7 @@ Private Sub DrawPanel()
     DrawText Canvas, 653, 498, "FUEL " & Format(Plane.fuel / 3.78541, "0.0") & " GAL   POWER " & Format(Plane.throttle, "0%")
     DrawText Canvas, 653, 526, "FLAP " & Choose(Plane.flaps + 1, "0", "10", "25", "40") & "   TRIM " & Format(Plane.trim, "+0.00;-0.00;0.00")
     DrawText Canvas, 653, 554, "OIL " & Format(Plane.oilTemp, "0") & " C / " & Format(Plane.oilPressure, "0") & " PSI"
-    DrawText Canvas, 653, 582, "KFCI " & Format(Sqr(Plane.east ^ 2 + Plane.north ^ 2) / 1852, "0.0") & " NM  /  RWY 15-33"
+    DrawText Canvas, 653, 582, "GS " & Format(GroundSpeedKnots(), "0") & " KT  KFCI " & Format(Sqr(Plane.east ^ 2 + Plane.north ^ 2) / 1852, "0.0") & " NM"
     DrawText Canvas, 653, 619, IIf(Plane.grounded, "ON GROUND", "AIRBORNE") & "   " & IIf(Plane.brake, "BRAKE", ""), 0, RGB(214, 178, 104)
     If CameraMode = 4 Then
         If instrumentDC = 0 Then
@@ -464,7 +481,7 @@ Private Sub DrawPanel()
         DrawText Canvas, 30, 629, "TRUE AIRSPEED", 0
         DrawText Canvas, 320, 629, "ALTITUDE MSL", 0
         DrawText Canvas, 665, 629, "VERTICAL SPEED", 0
-        DrawText Canvas, 30, 674, "C CHANGE VIEW    M MAP    P PAUSE    ESC MENU", 0, RGB(145, 166, 170)
+        DrawText Canvas, 30, 674, Format(Latitude(Plane.north), "0.00000") & " N   " & Format(-Longitude(Plane.east), "0.00000") & " W    C VIEW   ESC MENU", 0, RGB(145, 166, 170)
     End If
 End Sub
 Private Sub DrawMap()
@@ -490,4 +507,133 @@ Private Sub DrawMap()
     DrawLine Canvas, 893, 147, 893 + Sin(Plane.heading) * 18, 147 - Cos(Plane.heading) * 18, RGB(255, 245, 222), 3
     Disk Canvas, 893, 147, 3, RGB(255, 80, 50)
     DrawText Canvas, 810, 228, "N UP    6.4 KM", 3
+End Sub
+
+Public Sub WorldFace(ByRef east() As Double, ByRef north() As Double, ByRef height() As Double, ByVal color As Long)
+    Dim ax(0 To 7) As Double, az(0 To 7) As Double, ah(0 To 7) As Double
+    Dim bx(0 To 7) As Double, bz(0 To 7) As Double, bh(0 To 7) As Double
+    Dim p(0 To 7) As POINTAPI, i As Long, j As Long, n As Long, u As Double, de As Double, dn As Double
+    For i = 0 To 3
+        de = east(i) - camE: dn = north(i) - camN
+        ax(i) = de * ch - dn * sh: az(i) = de * sh + dn * ch: ah(i) = height(i) - camAlt
+    Next
+    For i = 0 To 3
+        j = (i + 3) Mod 4
+        If (az(i) > 3) <> (az(j) > 3) Then
+            u = (3 - az(j)) / (az(i) - az(j))
+            bx(n) = ax(j) + u * (ax(i) - ax(j)): bz(n) = 3
+            bh(n) = ah(j) + u * (ah(i) - ah(j)): n = n + 1
+        End If
+        If az(i) > 3 Then bx(n) = ax(i): bz(n) = az(i): bh(n) = ah(i): n = n + 1
+    Next
+    If n < 3 Then Exit Sub
+    For i = 0 To n - 1
+        p(i).x = Clamp(240 + bx(i) * 300 / bz(i), -16000, 16000)
+        p(i).y = Clamp(240 + camPitch * 300 - bh(i) * 300 / bz(i), -16000, 16000)
+    Next
+    RasterPolygon p, bz, n, color, 1
+End Sub
+Private Sub RasterPolygon(ByRef p() As POINTAPI, ByRef z() As Double, ByVal count As Long, ByVal color As Long, ByVal bias As Double)
+    Dim low As Long, high As Long, i As Long, j As Long, x As Long, y As Long, first As Long, last As Long, index As Long
+    Dim leftX As Double, rightX As Double, leftQ As Double, rightQ As Double, u As Double, hitX As Double, hitQ As Double
+    Dim q As Double, dq As Double, rowY As Double, dibColor As Long
+    low = 480: high = -1
+    For i = 0 To count - 1
+        If p(i).y < low Then low = p(i).y
+        If p(i).y > high Then high = p(i).y
+    Next
+    If high < 0 Or low > 479 Then Exit Sub
+    low = Clamp(low, 0, 479): high = Clamp(high, 0, 479)
+    dibColor = (color And 255) * 65536 + (color And 65280) + ((color \ 65536) And 255)
+    For y = low To high
+        rowY = y + 0.5: leftX = 1E+20: rightX = -1E+20
+        For i = 0 To count - 1
+            j = (i + 1) Mod count
+            If (p(i).y <= rowY And p(j).y > rowY) Or (p(j).y <= rowY And p(i).y > rowY) Then
+                u = (rowY - p(i).y) / (p(j).y - p(i).y)
+                hitX = p(i).x + u * (p(j).x - p(i).x)
+                hitQ = (1 - u) / z(i) + u / z(j)
+                If hitX < leftX Then leftX = hitX: leftQ = hitQ
+                If hitX > rightX Then rightX = hitX: rightQ = hitQ
+            End If
+        Next
+        If rightX > leftX And rightX >= 0 And leftX < 480 Then
+            first = Clamp(Int(leftX + 0.5), 0, 479): last = Clamp(Int(rightX - 0.5), 0, 479)
+            dq = (rightQ - leftQ) / (rightX - leftX)
+            q = leftQ + (first + 0.5 - leftX) * dq
+            index = y * 480 + first
+            For x = first To last
+                If q * bias >= inverseDepth(index) Then
+                    pixels(index) = dibColor: inverseDepth(index) = q
+                    SceneryPixels = SceneryPixels + 1
+                End If
+                index = index + 1: q = q + dq
+            Next
+        End If
+    Next
+End Sub
+Public Function CheckDepthRaster() As Boolean
+    Dim p(0 To 3) As POINTAPI, z(0 To 3) As Double, i As Long
+    p(0).x = 20: p(0).y = 20: p(1).x = 40: p(1).y = 20
+    p(2).x = 40: p(2).y = 40: p(3).x = 20: p(3).y = 40
+    For i = 0 To 3: z(i) = 50: Next
+    inverseDepth(30 + 30 * 480) = 0
+    RasterPolygon p, z, 4, RGB(255, 0, 0), 1
+    For i = 0 To 3: z(i) = 100: Next
+    RasterPolygon p, z, 4, RGB(0, 0, 255), 1
+    CheckDepthRaster = pixels(30 + 30 * 480) = &HFF0000&
+    For i = 0 To 3: z(i) = 25: Next
+    RasterPolygon p, z, 4, RGB(0, 255, 0), 1
+    CheckDepthRaster = CheckDepthRaster And pixels(30 + 30 * 480) = &HFF00&
+End Function
+
+Private Sub DrawRain()
+    Dim i As Long, x As Long, y As Long, count As Long, phase As Double
+    count = 90: If Quality = 0 Then count = 40
+    phase = Plane.elapsed * 350
+    For i = 0 To count - 1
+        x = (i * 137 + CLng(Plane.elapsed * WindEast * 8)) Mod 1000
+        If x < 0 Then x = x + 1000
+        y = (i * 83 + CLng(phase)) Mod 490
+        DrawLine Canvas, x, y, x - 4 - CLng(WindEast), y + 17, RGB(164, 187, 194)
+    Next
+End Sub
+
+Private Sub DrawSun(ByVal horizon As Double)
+    Dim angle As Double, altitude As Double, cx As Double, cy As Double, x As Long, y As Long
+    Dim d As Double, alpha As Double, old As Long, r As Long, g As Long, b As Long
+    angle = Wrap(5.4977871438 - camYaw + PI) - PI: altitude = 0.7853981634
+    If Weather = 1 Then angle = Wrap(4.7123889804 - camYaw + PI) - PI: altitude = 0.14
+    If Abs(angle) > 0.95 Then Exit Sub
+    cx = 240 + Tan(angle) * 300: cy = horizon - Tan(altitude) * 300
+    For y = CLng(Clamp(cy - 16, 0, 479)) To CLng(Clamp(cy + 16, 0, 479))
+        For x = CLng(Clamp(cx - 16, 0, 479)) To CLng(Clamp(cx + 16, 0, 479))
+            d = Sqr((x - cx) ^ 2 + (y - cy) ^ 2)
+            If d < 16 Then
+                alpha = Clamp((16 - d) / 12, 0, 1)
+                old = pixels(x + y * 480)
+                r = ((old \ 65536) And 255) * (1 - alpha) + 255 * alpha
+                g = ((old \ 256) And 255) * (1 - alpha) + 220 * alpha
+                b = (old And 255) * (1 - alpha) + 146 * alpha
+                pixels(x + y * 480) = r * 65536 + g * 256 + b
+            End If
+        Next
+    Next
+End Sub
+
+Private Sub RunwayNumber(ByVal along As Double, ByVal direction As Double, ByVal first As String, ByVal second As String)
+    Dim digit As Long, row As Long, col As Long, pattern As String, ch As String
+    For digit = 0 To 1
+        ch = first: If digit = 1 Then ch = second
+        Select Case ch
+            Case "1": pattern = "00100011000010000100001000010001110"
+            Case "5": pattern = "11111100001000011110000010000111110"
+            Case "3": pattern = "11110000010000101110000010000111110"
+        End Select
+        For row = 0 To 6
+            For col = 0 To 4
+                If Mid$(pattern, row * 5 + col + 1, 1) = "1" Then GroundQuad along + direction * (3 - row) * 2.3, direction * (-6 + digit * 7 + col), 2.3, 1, RGB(229, 229, 214)
+            Next
+        Next
+    Next
 End Sub

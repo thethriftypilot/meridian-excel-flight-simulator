@@ -39,8 +39,12 @@ Public Sub ApplyInput(ByVal dt As Double)
     If Pressed(77) Then ShowMap = Not ShowMap
     If Pressed(86) Then Muted = Not Muted
     If Pressed(82) Then ResetFlight Scenario: Paused = False
-    If Pressed(70) Then Plane.flaps = (Plane.flaps + 1) Mod 4
+    If Pressed(70) Then Plane.flaps = (Plane.flaps + 1) Mod 4: TriggerSound 3
     If Pressed(84) Then Demo = Not Demo
+    If Pressed(69) And Not Paused Then
+        Plane.engineRunning = Not Plane.engineRunning And Plane.fuel > 0
+        If Plane.engineRunning Then TriggerSound 1 Else TriggerSound 3
+    End If
     If Demo Or Paused Then Exit Sub
     e = -CInt(KeyDown(40)) + CInt(KeyDown(38))
     a = -CInt(KeyDown(39)) + CInt(KeyDown(37))

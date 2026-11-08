@@ -2,11 +2,11 @@
 
 ## Renderer choice
 
-A triangle rasterizer could support arbitrary scenery but would require clipping, triangle setup, depth buffering, and many more VBA pixel operations. GDI-only projected terrain polygons would suffer object/draw-call overhead and visible facets. A voxel-space heightfield gives front-to-back terrain occlusion with one horizon value per column, direct image sampling, and economical distance-dependent ray spacing. It cannot draw caves, overhangs, or volumetric buildings.
+A triangle rasterizer could support arbitrary scenery but would require clipping, triangle setup, depth buffering, and many more VBA pixel operations. GDI-only projected terrain polygons would suffer object/draw-call overhead and visible facets. A voxel-space heightfield gives front-to-back terrain occlusion with one horizon value per column, direct image sampling, and economical distance-dependent ray spacing. The heightfield itself cannot draw caves or overhangs. A small complementary convex-polygon rasterizer now handles runway surfaces, airport structures, and the external aircraft.
 
 `modRender` generates a 480×480 32-bit top-down DIB in a preallocated Long array. Extra area around the visible crop accommodates bank rotation. `StretchDIBits` transfers it to a scene memory DC. `PlgBlt` rolls/scales the image onto a 1000×700 backbuffer. GDI draws the cockpit into the same backbuffer, and one `StretchBlt` presents it to a UserForm. Native graphics performs presentation and basic primitives; VBA decides visibility, geometry, samples, lighting, fog, and every terrain pixel.
 
-Balanced samples every column. Performance fills pairs of columns and increases depth stepping. The renderer skips near rays that cannot intersect the package's measured maximum elevation. Distance-based texture mipmaps reduce distant aliasing. Directional shading is derived from DEM gradients; fog blends to the weather-dependent horizon. Runway polygons are clipped against a near plane and follow the DEM's longitudinal elevation. Their overlay does not have a general-purpose z-buffer; see limitations.
+Balanced samples every column. Performance fills pairs of columns and increases depth stepping. The renderer skips near rays that cannot intersect the package's measured maximum elevation. Distance-based texture mipmaps reduce distant aliasing. Directional shading is derived from DEM gradients; fog blends to the weather-dependent horizon. Runway polygons are clipped against a near plane and follow the DEM's longitudinal elevation. Terrain spans also populate an inverse-depth buffer. Near-clipped scenery faces interpolate inverse depth across scanlines and compare each covered pixel against it; the runway receives a small tolerance for coarse DEM z-fighting. This adds inexpensive generalized buildings and a depth-tested aircraft without replacing the efficient terrain renderer.
 
 ## Simulation
 
@@ -14,23 +14,32 @@ Balanced samples every column. Performance fills pairs of columns and increases 
 
 Ground contact uses bilinear terrain elevation and a runway footprint. Ground roll includes friction, braking, steering, and collision limits. Weather adds ground-track wind and deterministic sinusoidal disturbance. Demonstration mode produces control inputs using altitude, speed, and bank feedback; it does not play a video or move through prerecorded frames.
 
-`modWorld` preloads the compact 20.48 km package once. Entire-world residency replaces runtime tile churn: approximately 77 MB of DEM, color, and mip data. No GeoTIFF is parsed during flight. World coordinates are local east/north ground metres derived from EPSG:3857 with a cosine correction at the reference latitude. Local scale distortion is small but not survey-grade.
+`modWorld` preloads the compact 20.48 km package once. Entire-world residency replaces runtime tile churn: approximately 77 MB of DEM, color, and mip data plus day/sunset lighting caches and frame/depth buffers. No GeoTIFF is parsed during flight. World coordinates are local east/north ground metres derived from EPSG:3857 with a cosine correction at the reference latitude. Local scale distortion is small but not survey-grade.
 
-`modAudio` owns four persistent PCM buffers and WAVEHDR structures. It uses callback-free `waveOut` polling. Continuous-phase harmonics approximate engine pulses; airspeed and ground speed contribute noise; stall/overspeed add a warning tone. The mixer refills completed buffers without blocking playback. `waveOutReset`, unprepare, and close release resources on exit. There are no sampled sound licenses or external audio processes.
+`modAudio` owns four persistent PCM buffers and WAVEHDR structures. It uses callback-free `waveOut` polling. Continuous-phase harmonics approximate engine pulses; airspeed and ground speed contribute noise; stall/overspeed add a warning tone. The mixer refills completed buffers without blocking playback. `waveOutReset`, unprepare, and close release resources on exit. Startup, touchdown, and switch events use short synthesized envelopes in the same mixer. Original generated menu WAVs use asynchronous PlaySoundW. There are no third-party sampled-sound licenses or external audio processes.
 
 ## Native ABI and lifecycle
 
 All declarations are PtrSafe. Handles and pointers use LongPtr; Win32 integers use Long. QPC uses Currency as an 8-byte LARGE_INTEGER container; the same scaling cancels in counter/frequency division. BITMAPINFOHEADER is 40 bytes. WAVEHDR is 48 bytes on x64; WAVEFORMATEX fields occupy the documented first 18 bytes. Audio callbacks are NULL, preventing VBA reentrancy. GDI selected objects are restored before deletion; canvas capture temporarily deselects its bitmap. Device contexts are released by their matching API.
 
-`modMain` owns the loop and error cleanup. `modInput` ignores keys when the UserForm is not foreground. `modTests` runs actual VBA state, rendering, audio, and cleanup checks. Form definitions are generated by the build script and exported as `.frm`/`.frx` for inspection.
+`modMain` owns the loop and error cleanup. `modInput` ignores keys when the UserForm is not foreground. `modTests` runs actual VBA state, rendering, audio, and cleanup checks, including isolated display changes for all 13 instruments. `modDiagnostics` runs a continuous render/audio/physics soak independent of desktop focus and logs process working set and GDI counts. Form definitions are generated by the build script and exported as `.frm`/`.frx` for inspection.
 
 ## API references
 
 - [StretchDIBits](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-stretchdibits)
+
 - [PlgBlt](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-plgblt)
+
 - [QueryPerformanceCounter](https://learn.microsoft.com/en-us/windows/win32/api/profileapi/nf-profileapi-queryperformancecounter)
+
 - [GetAsyncKeyState](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getasynckeystate)
+
 - [WAVEHDR](https://learn.microsoft.com/en-us/windows/win32/api/mmeapi/ns-mmeapi-wavehdr)
+
 - [waveOutOpen](https://learn.microsoft.com/en-us/windows/win32/api/mmeapi/nf-mmeapi-waveoutopen)
 
 32-bit Office is not validated. Do not infer support from PtrSafe declarations alone.
+
+The flight form covers the Excel window without changing its global UI settings. Presentation letterboxes the 1000×700 canvas to preserve gauge shape. Geometry and viewport buffers stay allocated for a session, and the static cockpit has its own cached bitmap.
+
+Additional API references: [PlaySoundW](https://learn.microsoft.com/en-us/previous-versions/dd743680(v=vs.85)), [GetProcessMemoryInfo](https://learn.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-getprocessmemoryinfo), [PROCESS_MEMORY_COUNTERS](https://learn.microsoft.com/en-us/windows/win32/api/psapi/ns-psapi-process_memory_counters). The memory-counter structure uses DWORD fields followed by SIZE_T/LongPtr fields (72 bytes on x64); the native memory check is included in the self-tests.

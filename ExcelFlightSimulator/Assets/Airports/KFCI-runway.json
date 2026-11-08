@@ -1,0 +1,220 @@
+{
+  "objectIdFieldName": "OBJECTID",
+  "uniqueIdField": {
+    "name": "OBJECTID",
+    "isSystemMaintained": true
+  },
+  "globalIdFieldName": "",
+  "geometryProperties": {
+    "shapeAreaFieldName": "Shape__Area",
+    "shapeLengthFieldName": "Shape__Length",
+    "units": "esriDecimalDegrees"
+  },
+  "geometryType": "esriGeometryPolygon",
+  "spatialReference": {
+    "wkid": 4326,
+    "latestWkid": 4326
+  },
+  "fields": [
+    {
+      "name": "OBJECTID",
+      "type": "esriFieldTypeOID",
+      "alias": "OBJECTID",
+      "sqlType": "sqlTypeOther",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "GLOBAL_ID",
+      "type": "esriFieldTypeString",
+      "alias": "GLOBAL_ID",
+      "sqlType": "sqlTypeOther",
+      "length": 50,
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "AIRPORT_ID",
+      "type": "esriFieldTypeString",
+      "alias": "AIRPORT_ID",
+      "sqlType": "sqlTypeOther",
+      "length": 50,
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "DESIGNATOR",
+      "type": "esriFieldTypeString",
+      "alias": "DESIGNATOR",
+      "sqlType": "sqlTypeOther",
+      "length": 254,
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "LENGTH",
+      "type": "esriFieldTypeDouble",
+      "alias": "LENGTH",
+      "sqlType": "sqlTypeOther",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "WIDTH",
+      "type": "esriFieldTypeDouble",
+      "alias": "WIDTH",
+      "sqlType": "sqlTypeOther",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "DIM_UOM",
+      "type": "esriFieldTypeString",
+      "alias": "DIM_UOM",
+      "sqlType": "sqlTypeOther",
+      "length": 254,
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "COMP_CODE",
+      "type": "esriFieldTypeString",
+      "alias": "COMP_CODE",
+      "sqlType": "sqlTypeOther",
+      "length": 254,
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "LIGHTACTV",
+      "type": "esriFieldTypeSmallInteger",
+      "alias": "LIGHTACTV",
+      "sqlType": "sqlTypeOther",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "LIGHTINTNS",
+      "type": "esriFieldTypeString",
+      "alias": "LIGHTINTNS",
+      "sqlType": "sqlTypeOther",
+      "length": 254,
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "AK_LOW",
+      "type": "esriFieldTypeSmallInteger",
+      "alias": "AK_LOW",
+      "sqlType": "sqlTypeOther",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "AK_HIGH",
+      "type": "esriFieldTypeSmallInteger",
+      "alias": "AK_HIGH",
+      "sqlType": "sqlTypeOther",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "US_LOW",
+      "type": "esriFieldTypeSmallInteger",
+      "alias": "US_LOW",
+      "sqlType": "sqlTypeOther",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "US_HIGH",
+      "type": "esriFieldTypeSmallInteger",
+      "alias": "US_HIGH",
+      "sqlType": "sqlTypeOther",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "US_AREA",
+      "type": "esriFieldTypeSmallInteger",
+      "alias": "US_AREA",
+      "sqlType": "sqlTypeOther",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "PACIFIC",
+      "type": "esriFieldTypeSmallInteger",
+      "alias": "PACIFIC",
+      "sqlType": "sqlTypeOther",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "Shape__Area",
+      "type": "esriFieldTypeDouble",
+      "alias": "Shape__Area",
+      "sqlType": "sqlTypeDouble",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "Shape__Length",
+      "type": "esriFieldTypeDouble",
+      "alias": "Shape__Length",
+      "sqlType": "sqlTypeDouble",
+      "domain": null,
+      "defaultValue": null
+    }
+  ],
+  "features": [
+    {
+      "attributes": {
+        "OBJECTID": 16332,
+        "GLOBAL_ID": "202F22A3-C21D-4467-BD60-3EBD8538369A",
+        "AIRPORT_ID": "A92F7281-96E5-43DF-87ED-BDDC69F97B97",
+        "DESIGNATOR": "15/33",
+        "LENGTH": 5500,
+        "WIDTH": 100,
+        "DIM_UOM": "FT",
+        "COMP_CODE": "ASPH",
+        "LIGHTACTV": 2,
+        "LIGHTINTNS": "LIH",
+        "AK_LOW": 0,
+        "AK_HIGH": 0,
+        "US_LOW": 1,
+        "US_HIGH": 1,
+        "US_AREA": 0,
+        "PACIFIC": 0,
+        "Shape__Area": 5.200304485697416E-06,
+        "Shape__Length": 0.034078768653091195
+      },
+      "geometry": {
+        "rings": [
+          [
+            [
+              -77.5190240689181,
+              37.4004782989432
+            ],
+            [
+              -77.5309143302436,
+              37.4122343709602
+            ],
+            [
+              -77.5306463891709,
+              37.4124068330058
+            ],
+            [
+              -77.5187561428454,
+              37.4006507339888
+            ],
+            [
+              -77.5190240689181,
+              37.4004782989432
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -43,7 +43,7 @@
     {
       "test": "FAA northwest field elevation",
       "status": "PASS",
-      "detail": "Nearest DEM threshold sample 71.946 m; dated FAA field elevation 71.933 m"
+      "detail": "Nearest DEM threshold sample 71.946 m; FAA 29 October 2026 field elevation 71.933 m"
     },
     {
       "test": "elevation.tif.json export",

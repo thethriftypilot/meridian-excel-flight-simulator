@@ -41,6 +41,7 @@ Private Sub UserForm_Initialize()
         .AddItem "Low visibility"
         .AddItem "Night flight"
         .AddItem "Apron / taxi"
+        .AddItem "Crosswind landing"
         .ListIndex = 1
     End With
     With cboWeather
@@ -50,6 +51,7 @@ Private Sub UserForm_Initialize()
         .AddItem "Haze"
         .AddItem "Night"
         .AddItem "Overcast / gusts"
+        .AddItem "Rain / reduced visibility"
         .ListIndex = 0
     End With
     cboQuality.AddItem "Performance": cboQuality.AddItem "Balanced": cboQuality.ListIndex = 0
@@ -65,10 +67,12 @@ Private Sub ConfigureFlight()
     If Scenario = 3 Then SetWeather 1
     If Scenario = 4 Then SetWeather 3
     If Scenario = 5 Then SetWeather 4
+    If Scenario = 7 Then SetWeather 2
     quality = cboQuality.ListIndex
     Volume = cboVolume.ListIndex * 0.325
     Muted = (Volume = 0)
     Sensitivity = 0.5 + cboSensitivity.ListIndex * 0.3
+    Call PlayMenuClick
 End Sub
 Private Sub btnStart_Click()
     ConfigureFlight
@@ -82,6 +86,7 @@ Private Sub btnClose_Click()
     Unload Me
 End Sub
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+    StopMenuAudio
     MenuOpen = False
 End Sub
 

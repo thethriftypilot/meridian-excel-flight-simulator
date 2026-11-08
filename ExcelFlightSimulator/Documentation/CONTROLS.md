@@ -15,8 +15,11 @@
 | R | Reset current scenario |
 | T | Toggle automatic demonstration controller |
 | V | Mute / unmute |
+| E | Shut down / restart engine when fuel is available |
 | Esc | Return to menu |
 
 The menu offers Gentle, Normal, and Direct control sensitivity, sound level, weather, and rendering quality. Keys use polled physical states with smoothed deflection, not Windows repeat messages. Hold W/S for sustained power changes. Only the focused simulator accepts controls. Demonstration mode owns the flight controls until T is pressed.
 
 Heading in the top bar is true. The magnetic compass uses a fixed, approximate 10° west variation (magnetic = true + 10°). Altitudes are metres internally and displayed in feet; vertical speed is feet/minute. The airspeed dial applies a simplified density correction; the top-bar speed is horizontal true airspeed. Oil readings are a simplified model, not Piper system calibration.
+
+The focused instrument view shows latitude/longitude and large flight-data values. The flight computer includes groundspeed with wind. Crosswind landing initializes the approach with the crosswind preset; Rain / reduced visibility can be selected independently.

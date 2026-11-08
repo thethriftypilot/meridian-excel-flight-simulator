@@ -25,10 +25,22 @@ Private Declare PtrSafe Function waveOutUnprepareHeader Lib "winmm" (ByVal handl
 Private Declare PtrSafe Function waveOutWrite Lib "winmm" (ByVal handle As LongPtr, ByRef header As WAVEHDR, ByVal size As Long) As Long
 Private Declare PtrSafe Function waveOutReset Lib "winmm" (ByVal handle As LongPtr) As Long
 Private Declare PtrSafe Function waveOutClose Lib "winmm" (ByVal handle As LongPtr) As Long
+Private Declare PtrSafe Function PlaySoundW Lib "winmm" (ByVal name As LongPtr, ByVal libraryHandle As LongPtr, ByVal flags As Long) As Long
 Private output As LongPtr, headers(0 To 3) As WAVEHDR
 Private samples(0 To 2204, 0 To 3) As Integer
 Private sine(0 To 2047) As Double, phase As Double, warningPhase As Double, noise As Double
 Public AudioStatus As String, AudioBuffers As Long
+Private cueKind As Long, cueRemaining As Double, cueGain As Double, cuePhase As Double
+Public AudioCueCount As Long
+Public Sub TriggerSound(ByVal kind As Long, Optional ByVal gain As Double = 1)
+    cueKind = kind: cueGain = Clamp(gain, 0, 1): cuePhase = 0
+    Select Case kind
+        Case 1: cueRemaining = 0.9
+        Case 2: cueRemaining = 0.32
+        Case Else: cueRemaining = 0.05
+    End Select
+    AudioCueCount = AudioCueCount + 1
+End Sub
 Private Sub AudioCheck(ByVal result As Long, ByVal operation As String)
     If result <> 0 Then Err.Raise vbObjectError + 201, "Audio", operation & ": " & CStr(result)
 End Sub
@@ -39,6 +51,7 @@ Public Sub StartAudio()
     fmt.avgBytesPerSec = 44100: fmt.blockAlign = 2: fmt.bitsPerSample = 16
     For i = 0 To 2047: sine(i) = Sin(i * 2 * PI / 2048): Next
     phase = 0: warningPhase = 0: noise = 17: AudioBuffers = 0
+    If Plane.engineRunning Then TriggerSound 1
     AudioCheck waveOutOpen(output, -1, fmt, 0, 0, 0), "waveOutOpen"
     For i = 0 To 3
         headers(i).data = VarPtr(samples(0, i)): headers(i).bufferLength = 4410
@@ -52,8 +65,9 @@ End Sub
 Private Sub FillAudio(ByVal slot As Long)
     Dim i As Long, value As Double, freq As Double, amp As Double, n As Double, wind As Double
     freq = Clamp(Plane.rpm, 400, 2800) / 30 * 2048 / 22050
-    amp = (0.12 + Plane.throttle * 0.17) * Volume
-    wind = Clamp(Plane.speed / 100, 0, 0.8) * 0.13
+    amp = (0.12 + Plane.throttle * 0.17) * Volume * Clamp(Plane.rpm / 700, 0, 1)
+    wind = Clamp((Plane.speed + Sqr(WindEast ^ 2 + WindNorth ^ 2)) / 100, 0, 0.8) * 0.13
+    If Weather = 6 Then wind = wind + 0.08
     If Muted Or Paused Then amp = 0: wind = 0
     For i = 0 To 2204
         phase = phase + freq: If phase >= 2048 Then phase = phase - 2048
@@ -64,6 +78,17 @@ Private Sub FillAudio(ByVal slot As Long)
         If Plane.grounded Then value = value + n * Clamp(Plane.speed / 70, 0, 0.3) * amp
         warningPhase = warningPhase + 81.734: If warningPhase >= 2048 Then warningPhase = warningPhase - 2048
         If (Plane.stalled Or Plane.speed > 82) And Not Muted And Not Paused Then value = value + 0.12 * Volume * sine(Int(warningPhase))
+        If cueRemaining > 0 Then
+            cuePhase = cuePhase + 1 / 22050
+            If Not Muted And Not Paused Then
+                Select Case cueKind
+                    Case 1: value = value + Volume * cueGain * 0.12 * n * (0.5 + 0.5 * Sin(cuePhase * 140)) * Clamp(cueRemaining * 3, 0, 1)
+                    Case 2: value = value + Volume * cueGain * 0.35 * n * (cueRemaining / 0.32) ^ 2
+                    Case Else: value = value + Volume * cueGain * 0.15 * Sin(cuePhase * 2 * PI * 1150) * cueRemaining / 0.05
+                End Select
+            End If
+            cueRemaining = cueRemaining - 1 / 22050
+        End If
         samples(i, slot) = CInt(Clamp(value, -0.95, 0.95) * 32767)
     Next
     AudioBuffers = AudioBuffers + 1
@@ -87,5 +112,20 @@ Public Sub StopAudio()
     Next
     result = waveOutClose(output)
     If result <> 0 Then AudioStatus = "Audio close error " & result Else AudioStatus = "Stopped"
-    output = 0
+    output = 0: cueRemaining = 0
 End Sub
+
+Public Function PlayMenuClick() As Boolean
+    Dim path As String
+    If Muted Or Volume = 0 Then PlayMenuClick = True: Exit Function
+    path = ThisWorkbook.Path & "\Assets\Audio\menu-normal.wav"
+    If Volume < 0.5 Then path = ThisWorkbook.Path & "\Assets\Audio\menu-low.wav"
+    PlayMenuClick = (PlaySoundW(StrPtr(path), 0, &H20003) <> 0)
+End Function
+Public Sub StopMenuAudio()
+    PlaySoundW 0, 0, 0
+End Sub
+
+Public Function AudioDebug() As String
+    AudioDebug = CStr(output) & "/" & headers(0).flags & "/" & headers(1).flags & "/" & headers(2).flags & "/" & headers(3).flags
+End Function

@@ -1,18 +1,38 @@
 MERIDIAN / NATIVE EXCEL VBA TEST RUN
-2026-11-08 08:12:12
+2026-11-08 16:19:44
 PASS | A Compilation | Native VBA execution reached test runner
 PASS | C Cached hillshade | Resident lighting cache available
 PASS | C Terrain | DEM and texture binary lengths validated
 PASS | N Geography | Projection origin round trip
+PASS | L Memory API | Native process working-set counters available
 PASS | N Runway | 1676.4 x 30.48 m footprint
 PASS | E/F Takeoff | 60 s: altitude=270.0 m; speed=44.6 m/s
 PASS | M Stability | 20 simulated minutes / 72000 steps; altitude=530.1 m
 PASS | O Repeatability | Deterministic 20-minute replay
 PASS | G Touchdown/rollout | Controlled contact and 15 s braking; approach/flare requires separate pilot test
 PASS | G Hard landing | 8 m/s descent rejected
-PASS | G Approach/flare | Guidance-generated controls from approach scenario; touchdown 0.56 m/s; along=-623.7 m
+PASS | G Approach/flare | Guidance-generated controls from approach scenario; touchdown 0.57 m/s; along=-625.8 m
 PASS | Weather ground track | 4 m/s east wind changes position 8 m in 2 s
+PASS | E Fuel exhaustion | Engine cannot regenerate idle RPM after empty tank
+PASS | E Engine shutdown | No fuel burn and RPM decays when engine is off
+PASS | G Building collision | Generalized hangars collide below roof, clear overhead
+PASS | N Groundspeed | Wind affects groundspeed indication
+PASS | Weather rain | Rain preset changes visibility, wind, turbulence, drawing and audio
 PASS | B/J Launch 1 | Native UserForm, terrain and cockpit presented
+PASS | H Airspeed | Isolated state change updates the corresponding framebuffer region
+PASS | H Attitude | Isolated state change updates the corresponding framebuffer region
+PASS | H Altimeter | Isolated state change updates the corresponding framebuffer region
+PASS | H Vertical speed | Isolated state change updates the corresponding framebuffer region
+PASS | H Heading | Isolated state change updates the corresponding framebuffer region
+PASS | H Turn coordinator | Isolated state change updates the corresponding framebuffer region
+PASS | H Slip | Isolated state change updates the corresponding framebuffer region
+PASS | H Tachometer | Isolated state change updates the corresponding framebuffer region
+PASS | H Fuel | Isolated state change updates the corresponding framebuffer region
+PASS | H Oil temperature | Isolated state change updates the corresponding framebuffer region
+PASS | H Oil pressure | Isolated state change updates the corresponding framebuffer region
+PASS | H Flaps | Isolated state change updates the corresponding framebuffer region
+PASS | H Magnetic compass | Isolated state change updates the corresponding framebuffer region
+PASS | J Depth occlusion | Far polygon cannot overwrite near polygon; nearer polygon can
 PASS | D Throttle | Queued short W pulse changes polled power
 PASS | D Elevator | Down produces positive elevator
 PASS | D Aileron | Right produces positive aileron
@@ -20,14 +40,18 @@ PASS | D Rudder | D produces positive rudder
 PASS | D Brake | Space sets wheel brake
 PASS | D Pause | Short P event retained
 PASS | D Resume | Second P resumes
-PASS | L Benchmark | 120 frames: 16.14 FPS; terrain 56.83 ms; panel 3.55 ms. Uncapped native renderer, balanced.
-PASS | L Performance preset | 120 frames: 25.03 FPS; uncapped with 2-column spans
-PASS | L Moving map | Performance preset + map: 24.21 FPS over 30 frames
-PASS | H Camera/weather matrix | All 5 views x 6 weather presets rendered; banked cockpit and instrument captures saved
+PASS | D Engine off | E cuts engine
+PASS | D Engine restart | E restarts with fuel available
+PASS | L Benchmark | 120 frames: 15.29 FPS; terrain 59.84 ms; panel 3.94 ms. Uncapped native renderer, balanced.
+PASS | L Performance preset | 120 frames: 22.82 FPS; uncapped with 2-column spans
+PASS | L Moving map | Performance preset + map: 21.64 FPS over 30 frames
+PASS | H Camera/weather matrix | All 5 views x 7 weather presets rendered; banked cockpit and instrument captures saved
 PASS | I Audio | PCM 22.05 kHz / 4 buffers; synthesized buffers=23
+PASS | I Menu audio | Original WAV accepted by asynchronous PlaySoundW
+PASS | I Audio events | Startup and touchdown cues reached original PCM mixer
 PASS | B/J Launch 2 | Native UserForm, terrain and cockpit presented
 PASS | B/J Launch 3 | Native UserForm, terrain and cockpit presented
-PASS | K GDI cleanup | 3 cycles: before=405 after=402; includes Office UserForm cache
+PASS | K GDI cleanup | 3 cycles: before=405 after=407; includes Office UserForm cache
 PARTIAL | D Physical controls | Queued native control tests passed if reported above; UI pause/resume checked separately; sustained physical piloting not fully tested
-NOT TESTED | H Instruments | Numeric bindings implemented; visual inspection recorded separately
+PARTIAL | H Instruments | All 13 displayed bindings checked through framebuffer changes; independent calibration against aircraft data not performed
 

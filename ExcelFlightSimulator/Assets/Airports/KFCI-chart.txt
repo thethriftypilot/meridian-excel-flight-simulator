@@ -1,0 +1,104 @@
+372
+VIRGINIA
+RICHLANDS
+TAZEWELL CO
+(JFZ)(KJFZ)
+2 S
+UTC–5(–4DT)
+N37º03.82´ W81º47.90´
+2653
+B  NOTAM FILE JFZ
+RWY 07–25: H4299X75 (ASPH)
+S–12.5, D–18 MIRL
+RWY 07: REIL. PAPI(P2L)—GA 3.5º TCH 47´. Trees.
+RWY 25: REIL. PAPI(P2L)—GA 3.5º TCH 47´. Tree.
+SERVICE:
+FUEL 100LL, JET A+
+LGT MIRL Rwy 07–25 preset low intst.
+To increase intst and ACTVT REIL Rwy 07 and 25;  PAPI Rwy
+07–25—CTAF.
+AIRPORT REMARKS: Attended Mon–Sat 1330–2130Z‡. For Sun svc, call arpt
+durg rglr bus hrs to arng. Aft hrs nrs listed on door. Unattended New
+Years, Thanksgiving, and Christmas.
+AIRPORT MANAGER: 276-963-4509
+WEATHER DATA SOURCES: AWOS–3 118.075 (276) 596–9927.
+COMMUNICATIONS: CTAF/UNICOM 123.05
+®ATLANTA CENTER APP/DEP CON 127.85
+GCO 135.075 (thru ZTL clnc del and DCA RADIO) – inop.
+CLEARANCE DELIVERY PHONE: For CD if una via GCO ctc Atlanta ARTCC at
+770-210-7692.
+RADIO AIDS TO NAVIGATION:  NOTAM FILE DCA.
+GLADE SPRING  (L) (L) VORW/DME 115.55
+GZG
+Chan 102(Y)
+N36º49.51´ W82º04.74´
+045º 19.7 NM to fld. 4200/2W.
+VOR unusable:
+010º–095º
+115º–120º byd 20 NM blo 10,000´
+351º–004º byd 15 NM blo 8,000´
+LOC/DME 109.75
+I–JFZ
+Chan 34(Y)
+Rwy 25.
+RICHMOND
+RICHMOND EXEC/CHESTERFIELD CO
+(FCI)(KFCI)
+4 SW
+UTC–5(–4DT)
+N37º24.39´
+W77º31.49´
+236
+B
+TPA—See Remarks
+LRA  NOTAM FILE DCA
+RWY 15–33: H5500X100 (ASPH–GRVD)
+S–60, D–80 HIRL
+0.7% up NW
+RWY 15: REIL. PAPI(P4L)—GA 3.0º TCH 43´. Trees.
+RWY 33: MALSR. PAPI(P4L)—GA 3.0º TCH 50´. Trees.
+SERVICE:  S4
+FUEL 100LL, JET A  OX 3
+LGT HIRL Rwy 15–33 preset
+low intst; incr intst and ACTVT MALSR Rwy 33 and REIL Rwy
+15—CTAF.
+NOISE: Noise sensitive area north of arpt. No wind voluntary use of Rwy 15
+preferred.
+AIRPORT REMARKS: Attended 1200–0300Z‡. Fuel aft hrs call
+804–271–7793 or 844–435–9732 btn 0300–1200Z‡. 400´ twr 5
+NM north of arpt. Acft on ILS apch to Richmond Intl crossing over arpt.
+Med–fight: irregular departure pattern. Helicopter parking adj to Twy C.
+TPA—1236(1000) single engine, 1736(1500) multi–engine. ARFF
+eqpt and trained personnel avbl at arpt.
+AIRPORT MANAGER: 804-768-7722
+WEATHER DATA SOURCES: AWOS–3PT 128.625 (804) 271–8426.
+COMMUNICATIONS: CTAF/UNICOM 123.05
+®POTOMAC APP/DEP CON 126.75 118.2
+CLNC DEL 124.6
+CLEARANCE DELIVERY PHONE: For CD ctc Potomac Apch at 866-640-4124.
+RADIO AIDS TO NAVIGATION:  NOTAM FILE DCA.
+FLAT ROCK  (H) (H) VORTACW 113.3
+FAK
+Chan 80
+N37º31.71´ W77º49.69´
+123º 16.2 NM to fld. 460/6W.
+TACAN 338 radial unusable
+VOR unusable:
+111º–168º
+169º–204º blo 5,000´
+274º–337º blo 4,000´
+274º–337º byd 33 NM
+ILS/DME 108.3
+I–CFU
+Chan 20
+Rwy 33.
+Class IA.
+LOC/DME unmonitored when arpt unatndd.
+– – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – – –
+CINCINNATI
+L–26H
+IAP
+WASHINGTON
+H–10H, 12I, L–36H
+IAP
+NE, 29 OCT 2026 to 24 DEC 2026
