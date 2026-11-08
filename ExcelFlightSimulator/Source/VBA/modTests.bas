@@ -28,11 +28,13 @@ Public Function RunSelfTests() As String
     Dim i As Long, j As Long, t As Double, duration As Double, first As Double, landed As Boolean
     Dim before As Long, after As Long, maxHeight As Double, replay As Double, f As Integer
     Dim renderSum As Double, panelSum As Double, physicsSum As Double, audioSum As Double
+    Dim weatherIndex As Long, cameraIndex As Long
     Dim distance As Double, targetAlt As Double, desiredVS As Double, targetPitch As Double, desiredCL As Double
     On Error GoTo failed
     results = "MERIDIAN / NATIVE EXCEL VBA TEST RUN" & vbCrLf & Format(Now, "yyyy-mm-dd hh:nn:ss") & vbCrLf
     Check "A Compilation", True, "Native VBA execution reached test runner"
     LoadWorld
+    Check "C Cached hillshade", UBound(TerrainShade) = 1048575 And TerrainShade(0) >= 0.68 And TerrainShade(0) <= 1.15, "Resident lighting cache available"
     Check "C Terrain", UBound(Heights) = 1048575 And UBound(Colors) = 16777215, "DEM and texture binary lengths validated"
     Check "N Geography", Abs(Latitude(0) - 37.4065) < 0.000001 And Abs(Longitude(0) + 77.5248333333) < 0.000001, "Projection origin round trip"
     Check "N Runway", OnRunway(0, 0) And Not OnRunway(2000, 2000), "1676.4 x 30.48 m footprint"
@@ -145,6 +147,16 @@ Public Function RunSelfTests() As String
             ResetFlight 2: Call RenderFrame: Call Present: SaveFrame ThisWorkbook.Path & "\Tests\approach.bmp"
             ResetFlight 1: SetWeather 1: CameraMode = 2: Call RenderFrame: Call Present: SaveFrame ThisWorkbook.Path & "\Tests\sunset.bmp"
             SetWeather 4: Call RenderFrame: Call Present: SaveFrame ThisWorkbook.Path & "\Tests\night.bmp"
+            ResetFlight 1: SetWeather 0: CameraMode = 0: Plane.bank = 0.35: Plane.pitch = 0.12: Plane.vertical = 3
+            Call RenderFrame: SaveFrame ThisWorkbook.Path & "\Tests\banked-cockpit.bmp"
+            CameraMode = 4: Call RenderFrame: SaveFrame ThisWorkbook.Path & "\Tests\instruments.bmp"
+            For weatherIndex = 0 To 5
+                SetWeather weatherIndex
+                For cameraIndex = 0 To 4
+                    CameraMode = cameraIndex: Call RenderFrame: Present
+                Next
+            Next
+            Check "H Camera/weather matrix", True, "All 5 views x 6 weather presets rendered; banked cockpit and instrument captures saved"
             SetWeather 0: Call StartAudio: t = Clock()
             Do While Clock() - t < 2
                 Plane.throttle = (Clock() - t) / 2: Plane.rpm = 700 + Plane.throttle * 2000

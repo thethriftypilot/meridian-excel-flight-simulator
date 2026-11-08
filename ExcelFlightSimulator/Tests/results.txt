@@ -1,6 +1,7 @@
 MERIDIAN / NATIVE EXCEL VBA TEST RUN
-2026-11-08 07:45:40
+2026-11-08 08:12:12
 PASS | A Compilation | Native VBA execution reached test runner
+PASS | C Cached hillshade | Resident lighting cache available
 PASS | C Terrain | DEM and texture binary lengths validated
 PASS | N Geography | Projection origin round trip
 PASS | N Runway | 1676.4 x 30.48 m footprint
@@ -19,13 +20,14 @@ PASS | D Rudder | D produces positive rudder
 PASS | D Brake | Space sets wheel brake
 PASS | D Pause | Short P event retained
 PASS | D Resume | Second P resumes
-PASS | L Benchmark | 120 frames: 14.47 FPS; terrain 58.50 ms; panel 9.06 ms. Uncapped native renderer, balanced.
-PASS | L Performance preset | 120 frames: 22.73 FPS; uncapped with 2-column spans
-PASS | L Moving map | Performance preset + map: 22.58 FPS over 30 frames
+PASS | L Benchmark | 120 frames: 16.14 FPS; terrain 56.83 ms; panel 3.55 ms. Uncapped native renderer, balanced.
+PASS | L Performance preset | 120 frames: 25.03 FPS; uncapped with 2-column spans
+PASS | L Moving map | Performance preset + map: 24.21 FPS over 30 frames
+PASS | H Camera/weather matrix | All 5 views x 6 weather presets rendered; banked cockpit and instrument captures saved
 PASS | I Audio | PCM 22.05 kHz / 4 buffers; synthesized buffers=23
 PASS | B/J Launch 2 | Native UserForm, terrain and cockpit presented
 PASS | B/J Launch 3 | Native UserForm, terrain and cockpit presented
-PASS | K GDI cleanup | 3 cycles: before=406 after=404; includes Office UserForm cache
+PASS | K GDI cleanup | 3 cycles: before=405 after=402; includes Office UserForm cache
 PARTIAL | D Physical controls | Queued native control tests passed if reported above; UI pause/resume checked separately; sustained physical piloting not fully tested
 NOT TESTED | H Instruments | Numeric bindings implemented; visual inspection recorded separately
 

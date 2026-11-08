@@ -3,6 +3,9 @@ Option Explicit
 Public SimHwnd As LongPtr, Canvas As LongPtr
 Private windowDC As LongPtr, sceneDC As LongPtr, canvasBitmap As LongPtr, sceneBitmap As LongPtr
 Private oldCanvas As LongPtr, oldScene As LongPtr
+Private panelDC As LongPtr, panelBitmap As LongPtr, oldPanel As LongPtr
+Private buildingPanel As Boolean
+Private instrumentDC As LongPtr, instrumentBitmap As LongPtr, oldInstrument As LongPtr
 Private fonts(0 To 3) As LongPtr
 Private pixels(0 To 230399) As Long, ceiling(0 To 479) As Long
 Private bmi As BITMAPINFOHEADER
@@ -25,6 +28,14 @@ Public Sub InitRenderer(ByVal hwnd As LongPtr)
 End Sub
 Public Sub CloseRenderer()
     Dim i As Long
+    If panelDC <> 0 Then SelectObject panelDC, oldPanel
+    If panelBitmap <> 0 Then DeleteObject panelBitmap
+    If panelDC <> 0 Then DeleteDC panelDC
+    panelDC = 0: panelBitmap = 0
+    If instrumentDC <> 0 Then SelectObject instrumentDC, oldInstrument
+    If instrumentBitmap <> 0 Then DeleteObject instrumentBitmap
+    If instrumentDC <> 0 Then DeleteDC instrumentDC
+    instrumentDC = 0: instrumentBitmap = 0
     If Canvas <> 0 Then SelectObject Canvas, oldCanvas
     If sceneDC <> 0 Then SelectObject sceneDC, oldScene
     If canvasBitmap <> 0 Then DeleteObject canvasBitmap
@@ -158,8 +169,7 @@ Private Sub RenderTerrain()
                     c = Colors(tx + ty * 4096)
                     If z > 1500 Then c = ColorLOD1(ix + iy * 1024)
                     If z > 4500 Then c = ColorLOD2((ix \ 4) + (iy \ 4) * 256)
-                    shade = 1
-                    If ix < 1023 And iy < 1023 Then shade = Clamp(0.94 + (Heights(index + 1) - h) * 0.018 + (Heights(index + 1024) - h) * 0.012, 0.68, 1.15)
+                    shade = TerrainShade(index)
                     light = shade
                     If Weather = 1 Then light = light * 0.75
                     If Weather = 4 Then light = light * 0.13
@@ -184,22 +194,47 @@ Private Sub RenderTerrain()
 End Sub
 Private Sub Clouds(ByVal horizon As Double)
     Dim i As Long, x As Long, y As Long, cx As Double, cy As Double, rx As Double, ry As Double
-    Dim angle As Double, d As Double, edge As Double, c As Long
+    Dim angle As Double, d As Double, alpha As Double, base As Long, rr As Long, gg As Long, bb As Long
+    Dim u As Double, v As Double, density As Double, lobe As Double, tint As Double
+    Static mask(0 To 2047) As Single, maskReady As Boolean
+    Dim mx As Long, my As Long
+    If Not maskReady Then
+        For my = 0 To 31
+            v = -1 + my * 1.5 / 31
+            For mx = 0 To 63
+                u = -1 + mx * 2 / 63
+                density = 1 - u * u - (v / 0.43) ^ 2
+                lobe = 1 - ((u + 0.42) / 0.43) ^ 2 - ((v + 0.27) / 0.53) ^ 2
+                If lobe > density Then density = lobe
+                lobe = 1 - ((u - 0.05) / 0.42) ^ 2 - ((v + 0.38) / 0.62) ^ 2
+                If lobe > density Then density = lobe
+                lobe = 1 - ((u - 0.48) / 0.38) ^ 2 - ((v + 0.16) / 0.49) ^ 2
+                If lobe > density Then density = lobe
+                mask(mx + my * 64) = Clamp(density * 5, 0, 0.94)
+            Next
+        Next
+        maskReady = True
+    End If
     For i = 0 To 15
-        angle = i * 2.399 + 0.2: d = 3800 + (i Mod 5) * 900
-        angle = Wrap(angle - camYaw + PI) - PI
+        angle = Wrap(i * 2.399 + 0.2 - camYaw + PI) - PI: d = 3800 + (i Mod 5) * 900
         If Abs(angle) < 1.15 Then
             cx = 240 + Tan(angle) * 300: cy = horizon - (1300 - camAlt) * 300 / d
-            rx = 35 + (i Mod 4) * 16: ry = 5 + i Mod 5
-            c = &HDDDCD4: If Weather = 1 Then c = &HE8BC9D
-            For y = CLng(Clamp(cy - ry, 0, 479)) To CLng(Clamp(cy + ry, 0, 479))
-                edge = 1 - ((y - cy) / ry) ^ 2
-                If edge > 0 Then
-                    edge = Sqr(edge) * rx
-                    For x = CLng(Clamp(cx - edge, 0, 479)) To CLng(Clamp(cx + edge, 0, 479))
-                        pixels(x + y * 480) = c
-                    Next
-                End If
+            rx = 28 + (i Mod 4) * 12: ry = 13 + i Mod 5
+            For y = CLng(Clamp(cy - ry, 0, 479)) To CLng(Clamp(cy + ry * 0.5, 0, 479))
+                v = (y - cy) / ry
+                my = Clamp((v + 1) * 31 / 1.5, 0, 31)
+                tint = 1 - Clamp((v + 0.2) * 0.18, 0, 0.14)
+                For x = CLng(Clamp(cx - rx, 0, 479)) To CLng(Clamp(cx + rx, 0, 479))
+                    mx = Clamp(((x - cx) / rx + 1) * 31.5, 0, 63)
+                    alpha = mask(mx + my * 64)
+                    If alpha > 0 Then
+                        base = pixels(x + y * 480)
+                        rr = ((base \ 65536) And 255) * (1 - alpha) + 238 * tint * alpha
+                        gg = ((base \ 256) And 255) * (1 - alpha) + IIf(Weather = 1, 193, 239) * tint * alpha
+                        bb = (base And 255) * (1 - alpha) + IIf(Weather = 1, 161, 231) * tint * alpha
+                        pixels(x + y * 480) = rr * 65536 + gg * 256 + bb
+                    End If
+                Next
             Next
         End If
     Next
@@ -294,14 +329,20 @@ Private Sub DrawHUD()
 End Sub
 Private Sub Gauge(ByVal x As Long, ByVal y As Long, ByVal title As String, ByVal value As Double, ByVal maxValue As Double, ByVal units As String)
     Dim i As Long, angle As Double, nx As Long, ny As Long
-    Disk Canvas, x, y, 69, RGB(50, 57, 61)
-    Disk Canvas, x, y, 64, RGB(5, 12, 17)
+    If buildingPanel Then
+    Disk Canvas, x, y, 69, RGB(12, 18, 21)
+    Disk Canvas, x, y, 67, RGB(82, 94, 97)
+    Disk Canvas, x, y, 65, RGB(35, 44, 48)
+    Disk Canvas, x, y, 62, RGB(5, 12, 17)
     For i = 0 To 10
         angle = (-140 + 28 * i) * PI / 180
         DrawLine Canvas, x + Sin(angle) * 53, y - Cos(angle) * 53, x + Sin(angle) * 60, y - Cos(angle) * 60, RGB(188, 203, 204), 2
-        If i Mod 2 = 0 Then DrawText Canvas, x + Sin(angle) * 43 - 10, y - Cos(angle) * 43 - 5, Format(maxValue * i / 10, "0"), 3
+        If i Mod 2 = 0 And i > 0 And i < 10 Then DrawText Canvas, x + Sin(angle) * 43 - 10, y - Cos(angle) * 43 - 5, IIf(title = "CLIMB FPM", Format((i - 5) * 400, "0"), Format(maxValue * i / 10, "0")), 3
     Next
-    DrawText Canvas, x - 45, y - 26, title, 3, RGB(130, 168, 176)
+    If title = "CLIMB FPM" Then DrawText Canvas, x - 3, y - 49, "0", 3
+    DrawText Canvas, x - 39, y - 26, title, 3, RGB(130, 168, 176)
+    End If
+    If buildingPanel Then Exit Sub
     angle = (-140 + 280 * Clamp(value / maxValue, 0, 1)) * PI / 180
     DrawLine Canvas, x, y, x + Sin(angle) * 48, y - Cos(angle) * 48, RGB(241, 230, 185), 3
     Disk Canvas, x, y, 5, RGB(196, 208, 208)
@@ -313,18 +354,24 @@ Private Sub HorizonGauge(ByVal x As Long, ByVal y As Long)
     Disk Canvas, x, y, 69, RGB(50, 57, 61)
     'Short scanlines clipped to circular instrument, horizon responds to pitch and bank.
     Dim h As Double, ycut As Double, leftGround As Long, rightGround As Long
+    Static attitude(0 To 15128) As Long
+    Dim info As BITMAPINFOHEADER, pitchOffset As Double, bankSin As Double, bankCos As Double
+    bankSin = Sin(Plane.bank): bankCos = Cos(Plane.bank): pitchOffset = Plane.pitch * 130
     For row = -61 To 61
-        span = Sqr(61 * 61 - row * row)
-        Box Canvas, x - span, y + row, span * 2 + 1, 1, RGB(51, 121, 157)
-        If Abs(Sin(Plane.bank)) < 0.001 Then
-            If row * Cos(Plane.bank) > Plane.pitch * 130 Then Box Canvas, x - span, y + row, span * 2 + 1, 1, RGB(134, 87, 50)
-        Else
-            ycut = (Plane.pitch * 130 - row * Cos(Plane.bank)) / Sin(Plane.bank)
-            leftGround = -span: rightGround = span
-            If Sin(Plane.bank) > 0 Then leftGround = Clamp(ycut, -span, span + 1) Else rightGround = Clamp(ycut, -span - 1, span)
-            If rightGround >= leftGround Then Box Canvas, x + leftGround, y + row, rightGround - leftGround + 1, 1, RGB(134, 87, 50)
-        End If
+        For col = -61 To 61
+            If row * row + col * col > 4761 Then
+                attitude((row + 61) * 123 + col + 61) = &H1C2226
+            ElseIf row * row + col * col > 3721 Then
+                attitude((row + 61) * 123 + col + 61) = &H32393D
+            ElseIf row * bankCos + col * bankSin > pitchOffset Then
+                attitude((row + 61) * 123 + col + 61) = &H865732
+            Else
+                attitude((row + 61) * 123 + col + 61) = &H33799D
+            End If
+        Next
     Next
+    info.biSize = 40: info.biWidth = 123: info.biHeight = -123: info.biPlanes = 1: info.biBitCount = 32
+    StretchDIBits Canvas, x - 61, y - 61, 123, 123, 0, 0, 123, 123, attitude(0), info, 0, SRCCOPY
     DrawLine Canvas, x - 40, y, x - 10, y, RGB(255, 209, 83), 3
     DrawLine Canvas, x + 10, y, x + 40, y, RGB(255, 209, 83), 3
     DrawLine Canvas, x - 10, y, x, y + 7, RGB(255, 209, 83), 3
@@ -332,27 +379,93 @@ Private Sub HorizonGauge(ByVal x As Long, ByVal y As Long)
     DrawText Canvas, x - 29, y + 39, "ATTITUDE", 3
 End Sub
 Private Sub DrawPanel()
+    Dim saved As LongPtr, i As Long, x As Long, a As Double, hdg As Double, agl As Double
     If CameraMode <> 0 And CameraMode <> 4 Then Exit Sub
-    Box Canvas, 0, 490, 1000, 210, RGB(26, 35, 40)
-    Box Canvas, 0, 490, 1000, 8, RGB(11, 19, 24)
-    DrawLine Canvas, 0, 500, 1000, 500, RGB(74, 91, 97), 2
-    Gauge 85, 580, "AIRSPEED", Plane.speed * Exp(-Plane.altitude / 17000) * 1.94384, 160, "KT"
-    HorizonGauge 240, 580
-    Gauge 395, 580, "ALTITUDE", Plane.altitude * 3.28084, 10000, "FT"
-    Gauge 550, 580, "HEADING", Wrap(Plane.heading) * 180 / PI, 360, "T"
-    Gauge 705, 580, "ENGINE", Plane.rpm, 3000, "RPM"
-    Box Canvas, 798, 518, 184, 125, RGB(6, 17, 22)
-    DrawText Canvas, 812, 526, "VERTICAL " & Format(Plane.vertical * 196.85, "+0;-0;0"), 0, RGB(115, 215, 184)
-    DrawText Canvas, 812, 550, "FUEL " & Format(Plane.fuel / 3.78541, "0.0") & " GAL"
-    DrawText Canvas, 812, 574, "POWER " & Format(Plane.throttle, "0%")
-    DrawText Canvas, 812, 598, "FLAP " & Choose(Plane.flaps + 1, "0", "10", "25", "40") & "  TRIM " & Format(Plane.trim, "0.00")
-    DrawText Canvas, 24, 658, "OIL " & Format(Plane.oilTemp, "0") & " C / " & Format(Plane.oilPressure, "0") & " PSI", 0, RGB(156, 181, 184)
-    DrawText Canvas, 302, 658, "TURN " & Format(Plane.turnRate * 180 / PI, "+0.0;-0.0;0.0") & " DEG/S", 0, RGB(156, 181, 184)
-    DrawLine Canvas, 520, 668, 610, 668, RGB(156, 181, 184), 2
-    Disk Canvas, 565 + Plane.slip * 40, 668, 6, RGB(224, 214, 180)
-    DrawText Canvas, 652, 658, "PA-28-161 / WARRIOR II", 0, RGB(156, 181, 184)
-    DrawText Canvas, 24, 682, "ARROWS FLY  W/S POWER  F FLAPS  C VIEW  M MAP  V MUTE  P PAUSE  ESC MENU", 3, RGB(130, 153, 158)
-    If CameraMode = 4 Then StretchBlt Canvas, 0, 280, 1000, 420, Canvas, 0, 490, 1000, 210, SRCCOPY
+    If panelDC = 0 Then
+        panelDC = CreateCompatibleDC(Canvas): panelBitmap = CreateCompatibleBitmap(Canvas, 1000, 700)
+        If panelDC = 0 Or panelBitmap = 0 Then Err.Raise 7, , "Cockpit allocation failed"
+        oldPanel = SelectObject(panelDC, panelBitmap)
+        saved = Canvas: Canvas = panelDC: buildingPanel = True
+        Box Canvas, 0, 390, 1000, 310, RGB(28, 34, 38)
+        For i = 400 To 674 Step 4
+            DrawLine Canvas, 0, i, 1000, i, RGB(31, 38, 42)
+        Next
+        Box Canvas, 0, 390, 1000, 9, RGB(8, 13, 17)
+        Gauge 85, 470, "AIRSPEED", 0, 160, "KT"
+        Gauge 395, 470, "ALTITUDE", 0, 10000, "FT"
+        Gauge 395, 610, "CLIMB FPM", 0, 4000, ""
+        Disk Canvas, 240, 610, 69, RGB(50, 57, 61)
+        Disk Canvas, 240, 610, 64, RGB(5, 12, 17)
+        Disk Canvas, 85, 610, 69, RGB(50, 57, 61)
+        Disk Canvas, 85, 610, 64, RGB(5, 12, 17)
+        DrawText Canvas, 38, 568, "TURN / SLIP", 3
+        DrawText Canvas, 38, 640, "L   2 MIN   R", 3
+        Gauge 550, 470, "ENGINE", 0, 3000, "RPM"
+        Box Canvas, 637, 412, 341, 245, RGB(7, 17, 21)
+        DrawText Canvas, 653, 422, "MERIDIAN / FLIGHT COMPUTER", 0, RGB(98, 206, 187)
+        DrawLine Canvas, 650, 448, 965, 448, RGB(55, 80, 83)
+        DrawText Canvas, 493, 561, "PA-28-161", 0
+        DrawText Canvas, 491, 583, "WARRIOR II", 0
+        DrawText Canvas, 489, 625, "EXPERIMENTAL", 3, RGB(214, 178, 104)
+        For x = 12 To 987 Step 975
+            For i = 408 To 660 Step 252
+                Disk Canvas, x, i, 4, RGB(109, 120, 121)
+                DrawLine Canvas, x - 2, i - 2, x + 2, i + 2, RGB(20, 26, 30)
+            Next
+        Next
+        DrawText Canvas, 24, 684, "ARROWS FLY  W/S POWER  F FLAPS  C VIEW  M MAP  V MUTE  P PAUSE  ESC MENU", 3, RGB(145, 166, 170)
+        buildingPanel = False: Canvas = saved
+    End If
+    StretchBlt Canvas, 0, 390, 1000, 310, panelDC, 0, 390, 1000, 310, SRCCOPY
+    Gauge 85, 470, "AIRSPEED", Plane.speed * Exp(-Plane.altitude / 17000) * 1.94384, 160, "KT"
+    HorizonGauge 240, 470
+    Gauge 395, 470, "ALTITUDE", Plane.altitude * 3.28084, 10000, "FT"
+    'Signed VSI: center zero, clockwise climb, counterclockwise descent.
+    a = Clamp(Plane.vertical * 196.85 / 2000, -1, 1) * 140 * PI / 180
+    DrawLine Canvas, 395, 610, 395 + Sin(a) * 48, 610 - Cos(a) * 48, RGB(241, 230, 185), 3
+    Disk Canvas, 395, 610, 5, RGB(196, 208, 208)
+    Box Canvas, 360, 637, 70, 19, RGB(23, 35, 40)
+    DrawText Canvas, 366, 638, Format(Plane.vertical * 196.85, "+0;-0;0"), 3
+    hdg = Wrap(Plane.heading + 10 * PI / 180)
+    For i = 0 To 11
+        a = i * PI / 6 - hdg
+        DrawLine Canvas, 240 + Sin(a) * 53, 610 - Cos(a) * 53, 240 + Sin(a) * 60, 610 - Cos(a) * 60, RGB(188, 203, 204), 2
+        DrawText Canvas, 232 + Sin(a) * 43, 604 - Cos(a) * 43, Choose(i + 1, "N", "3", "6", "E", "12", "15", "S", "21", "24", "W", "30", "33"), 3
+    Next
+    DrawLine Canvas, 240, 596, 240, 623, RGB(241, 230, 185), 2
+    DrawLine Canvas, 221, 610, 259, 610, RGB(241, 230, 185), 2
+    DrawText Canvas, 215, 638, Format(hdg * 180 / PI, "000") & " M", 3
+    a = Clamp(Plane.turnRate * 180 / PI / 3, -2, 2) * 0.3
+    DrawLine Canvas, 85 - Cos(a) * 40, 607 - Sin(a) * 40, 85 + Cos(a) * 40, 607 + Sin(a) * 40, RGB(241, 230, 185), 3
+    DrawLine Canvas, 85, 598, 85, 617, RGB(241, 230, 185), 2
+    DrawLine Canvas, 54, 628, 116, 628, RGB(156, 181, 184), 2
+    Disk Canvas, 85 + Clamp(Plane.slip, -1, 1) * 26, 628, 5, RGB(224, 214, 180)
+    Gauge 550, 470, "ENGINE", Plane.rpm, 3000, "RPM"
+    agl = (Plane.altitude - Ground(Plane.east, Plane.north)) * 3.28084
+    DrawText Canvas, 653, 462, "AGL " & Format(agl, "0") & " FT", 1, RGB(115, 215, 184)
+    DrawText Canvas, 653, 498, "FUEL " & Format(Plane.fuel / 3.78541, "0.0") & " GAL   POWER " & Format(Plane.throttle, "0%")
+    DrawText Canvas, 653, 526, "FLAP " & Choose(Plane.flaps + 1, "0", "10", "25", "40") & "   TRIM " & Format(Plane.trim, "+0.00;-0.00;0.00")
+    DrawText Canvas, 653, 554, "OIL " & Format(Plane.oilTemp, "0") & " C / " & Format(Plane.oilPressure, "0") & " PSI"
+    DrawText Canvas, 653, 582, "KFCI " & Format(Sqr(Plane.east ^ 2 + Plane.north ^ 2) / 1852, "0.0") & " NM  /  RWY 15-33"
+    DrawText Canvas, 653, 619, IIf(Plane.grounded, "ON GROUND", "AIRBORNE") & "   " & IIf(Plane.brake, "BRAKE", ""), 0, RGB(214, 178, 104)
+    If CameraMode = 4 Then
+        If instrumentDC = 0 Then
+            instrumentDC = CreateCompatibleDC(Canvas): instrumentBitmap = CreateCompatibleBitmap(Canvas, 1000, 310)
+            If instrumentDC = 0 Or instrumentBitmap = 0 Then Err.Raise 7, , "Instrument view allocation failed"
+            oldInstrument = SelectObject(instrumentDC, instrumentBitmap)
+        End If
+        StretchBlt instrumentDC, 0, 0, 1000, 310, Canvas, 0, 390, 1000, 310, SRCCOPY
+        Box Canvas, 0, 200, 1000, 500, RGB(9, 18, 23)
+        StretchBlt Canvas, 0, 200, 1000, 310, instrumentDC, 0, 0, 1000, 310, SRCCOPY
+        DrawText Canvas, 30, 536, "FLIGHT DATA / INSTRUMENT VIEW", 0, RGB(106, 211, 197)
+        DrawText Canvas, 30, 573, Format(Plane.speed * 1.94384, "0") & " KT", 2
+        DrawText Canvas, 320, 573, Format(Plane.altitude * 3.28084, "0") & " FT", 2
+        DrawText Canvas, 665, 573, Format(Plane.vertical * 196.85, "+0;-0;0") & " FPM", 2
+        DrawText Canvas, 30, 629, "TRUE AIRSPEED", 0
+        DrawText Canvas, 320, 629, "ALTITUDE MSL", 0
+        DrawText Canvas, 665, 629, "VERTICAL SPEED", 0
+        DrawText Canvas, 30, 674, "C CHANGE VIEW    M MAP    P PAUSE    ESC MENU", 0, RGB(145, 166, 170)
+    End If
 End Sub
 Private Sub DrawMap()
     Dim x As Long, y As Long, ix As Long, iy As Long, c As Long, px As Long, py As Long

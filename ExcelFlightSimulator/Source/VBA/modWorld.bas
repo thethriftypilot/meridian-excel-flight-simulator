@@ -1,6 +1,7 @@
 Attribute VB_Name = "modWorld"
 Option Explicit
 Public Heights() As Single, Colors() As Long
+Public TerrainShade() As Single
 Public ColorLOD1() As Long, ColorLOD2() As Long
 Public Const TerrainSize As Long = 1024
 Public Const TextureSize As Long = 4096
@@ -8,7 +9,7 @@ Public Const HalfWorld As Double = 10240
 Public Const RunwayHeading As Double = 2.460914245312 '141 degrees true; approx chart magnetic 151
 Public WorldReady As Boolean
 Public Sub LoadWorld()
-    Dim f As Integer, root As String
+    Dim f As Integer, root As String, ix As Long, iy As Long, index As Long
     If WorldReady Then Exit Sub
     root = ThisWorkbook.Path & "\Assets\Terrain\"
     If FileLen(root & "height.bin") <> 4194304 Then Err.Raise 5, , "Invalid elevation package"
@@ -29,6 +30,13 @@ Public Sub LoadWorld()
     f = FreeFile
     Open root & "color-lod2.bin" For Binary Access Read As #f
     Get #f, , ColorLOD2: Close #f
+    ReDim TerrainShade(0 To 1048575)
+    For iy = 0 To 1023
+        For ix = 0 To 1023
+            index = ix + iy * 1024: TerrainShade(index) = 1
+            If ix < 1023 And iy < 1023 Then TerrainShade(index) = Clamp(0.94 + (Heights(index + 1) - Heights(index)) * 0.018 + (Heights(index + 1024) - Heights(index)) * 0.012, 0.68, 1.15)
+        Next
+    Next
     WorldReady = True
 End Sub
 Public Function TerrainGround(ByVal east As Double, ByVal north As Double) As Double

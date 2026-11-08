@@ -1,0 +1,28 @@
+name: Source checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tooling:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check Python tooling syntax
+        run: python -m compileall -q ExcelFlightSimulator/Tools
+      - name: Parse PowerShell build scripts
+        shell: pwsh
+        run: |
+          Get-ChildItem ExcelFlightSimulator/Tools -Recurse -Filter *.ps1 | ForEach-Object {
+            $tokens = $null
+            $parseErrors = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$tokens, [ref]$parseErrors)
+            if ($parseErrors.Count) { throw ($parseErrors | Out-String) }
+          }
+      - name: Explain native verification requirement
+        run: Write-Output 'Native VBA compilation, rendering, audio, and flight tests require installed desktop Excel. Run Tools/Build/build.ps1 -Test locally. This workflow checks tooling syntax only.'

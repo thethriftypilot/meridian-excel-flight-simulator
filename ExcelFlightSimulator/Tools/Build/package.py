@@ -3,7 +3,7 @@ from pathlib import Path
 import zipfile, hashlib, json
 root=Path(__file__).resolve().parents[2]
 dest=root.parent/'ExcelFlightSimulator.zip'
-files=[p for p in root.rglob('*') if p.is_file() and not p.name.startswith('~$') and p.name not in ['environment-probe.xlsx','imagery.jpg.json','PACKAGE_SHA256.json']]
+files=[p for p in root.rglob('*') if p.is_file() and '__pycache__' not in p.parts and not p.name.startswith('~$') and p.name not in ['environment-probe.xlsx','imagery.jpg.json','PACKAGE_SHA256.json']]
 manifest={str(p.relative_to(root)).replace('\\','/'):hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
 (root/'PACKAGE_SHA256.json').write_text(json.dumps(manifest,indent=2))
 files.append(root/'PACKAGE_SHA256.json')
