@@ -1,0 +1,54 @@
+Option Explicit
+Private Sub UserForm_Initialize()
+    If Len(Dir(ThisWorkbook.Path & "\Assets\Terrain\menu.bmp")) > 0 Then imgTerrain.Picture = LoadPicture(ThisWorkbook.Path & "\Assets\Terrain\menu.bmp")
+    With cboScenario
+        .AddItem "KFCI runway departure"
+        .AddItem "Richmond scenic flight"
+        .AddItem "Runway 15 approach"
+        .AddItem "Sunset flight"
+        .AddItem "Low visibility"
+        .AddItem "Night flight"
+        .AddItem "Apron / taxi"
+        .ListIndex = 1
+    End With
+    With cboWeather
+        .AddItem "Clear / calm"
+        .AddItem "Sunset"
+        .AddItem "Crosswind / scattered"
+        .AddItem "Haze"
+        .AddItem "Night"
+        .AddItem "Overcast / gusts"
+        .ListIndex = 0
+    End With
+    cboQuality.AddItem "Performance": cboQuality.AddItem "Balanced": cboQuality.ListIndex = 0
+    cboVolume.AddItem "Muted": cboVolume.AddItem "Low": cboVolume.AddItem "Normal": cboVolume.ListIndex = 2
+    cboSensitivity.AddItem "Gentle": cboSensitivity.AddItem "Normal": cboSensitivity.AddItem "Direct": cboSensitivity.ListIndex = 1
+End Sub
+Private Sub UserForm_Activate()
+    MenuOpen = True
+End Sub
+Private Sub ConfigureFlight()
+    Scenario = cboScenario.ListIndex
+    SetWeather cboWeather.ListIndex
+    If Scenario = 3 Then SetWeather 1
+    If Scenario = 4 Then SetWeather 3
+    If Scenario = 5 Then SetWeather 4
+    Quality = cboQuality.ListIndex
+    Volume = cboVolume.ListIndex * 0.325
+    Muted = (Volume = 0)
+    Sensitivity = 0.5 + cboSensitivity.ListIndex * 0.3
+End Sub
+Private Sub btnStart_Click()
+    ConfigureFlight
+    BeginFlight False
+End Sub
+Private Sub btnDemo_Click()
+    ConfigureFlight
+    BeginFlight True
+End Sub
+Private Sub btnClose_Click()
+    Unload Me
+End Sub
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+    MenuOpen = False
+End Sub

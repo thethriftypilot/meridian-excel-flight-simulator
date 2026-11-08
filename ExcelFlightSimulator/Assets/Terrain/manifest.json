@@ -1,0 +1,30 @@
+{
+  "latitude": 37.4065,
+  "longitude": -77.5248333333,
+  "half_extent_m": 10240,
+  "projection": "EPSG:3857 locally scaled by cos(reference latitude)",
+  "mercator_origin": [
+    -8630024.970496356,
+    4495920.128158439
+  ],
+  "scale": 0.7943457108201721,
+  "dem_size": 1024,
+  "dem_step_m": 20,
+  "texture_size": 4096,
+  "texture_step_m": 5,
+  "rows": "north to south",
+  "elevation_datum": "3DEP NAVD88, metres; no geoid conversion",
+  "dem_min": -98.74388122558594,
+  "dem_max": 117.36628723144531,
+  "dem_url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/exportImage?f=json&bbox=-8642916.083094455%2C4483029.01556034%2C-8617133.857898258%2C4508811.240756538&bboxSR=3857&imageSR=3857&size=1024%2C1024&interpolation=RSP_BilinearInterpolation&format=tiff&pixelType=F32&noData=-999999&renderingRule=%7B%22rasterFunction%22%3A%22None%22%7D",
+  "imagery_url": [
+    "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer/exportImage?f=json&bbox=-8642916.083094455%2C4495920.128158439%2C-8630024.970496356%2C4508811.240756538&bboxSR=3857&imageSR=3857&size=2048%2C2048&interpolation=RSP_BilinearInterpolation&format=jpg&bandIds=0%2C1%2C2",
+    "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer/exportImage?f=json&bbox=-8630024.970496356%2C4495920.128158439%2C-8617133.857898258%2C4508811.240756538&bboxSR=3857&imageSR=3857&size=2048%2C2048&interpolation=RSP_BilinearInterpolation&format=jpg&bandIds=0%2C1%2C2",
+    "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer/exportImage?f=json&bbox=-8642916.083094455%2C4483029.01556034%2C-8630024.970496356%2C4495920.128158439&bboxSR=3857&imageSR=3857&size=2048%2C2048&interpolation=RSP_BilinearInterpolation&format=jpg&bandIds=0%2C1%2C2",
+    "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer/exportImage?f=json&bbox=-8630024.970496356%2C4483029.01556034%2C-8617133.857898258%2C4495920.128158439&bboxSR=3857&imageSR=3857&size=2048%2C2048&interpolation=RSP_BilinearInterpolation&format=jpg&bandIds=0%2C1%2C2"
+  ],
+  "sha256": {
+    "height.bin": "63ec7333be9df24fc9f4c264f6de8e552d3512104d6bd2bffbbdd22d6be8d49f",
+    "color.bin": "65b7dbe9231b1decce0a3360837a36aa29cbad8d49f5d9a09f3ab64c0a54ab26"
+  }
+}

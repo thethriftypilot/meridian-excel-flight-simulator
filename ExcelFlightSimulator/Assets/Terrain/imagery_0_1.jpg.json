@@ -1,0 +1,16 @@
+{
+  "href": "https://imagery.nationalmap.gov/arcgis/rest/directories/imagery_output/USGSNAIPPlus_ImageServer/_ags_9c3070ee_eec9_434c_b4e7_fef8605627bc.jpg",
+  "width": 2048,
+  "height": 2048,
+  "extent": {
+    "xmin": -8630024.970496356,
+    "ymin": 4495920.128158439,
+    "xmax": -8617133.857898258,
+    "ymax": 4508811.240756538,
+    "spatialReference": {
+      "wkid": 102100,
+      "latestWkid": 3857
+    }
+  },
+  "scale": 0
+}

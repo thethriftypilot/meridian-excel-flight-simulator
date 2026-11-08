@@ -1,0 +1,13 @@
+Option Explicit
+Private Sub UserForm_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Shift As Integer)
+    QueueKey CLng(KeyCode), True
+End Sub
+Private Sub UserForm_KeyUp(ByVal KeyCode As MSForms.ReturnInteger, ByVal Shift As Integer)
+    QueueKey CLng(KeyCode), False
+End Sub
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+    If Running Then
+        Cancel = True
+        Running = False
+    End If
+End Sub

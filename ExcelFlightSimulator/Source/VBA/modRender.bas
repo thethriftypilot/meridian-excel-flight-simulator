@@ -1,0 +1,380 @@
+Attribute VB_Name = "modRender"
+Option Explicit
+Public SimHwnd As LongPtr, Canvas As LongPtr
+Private windowDC As LongPtr, sceneDC As LongPtr, canvasBitmap As LongPtr, sceneBitmap As LongPtr
+Private oldCanvas As LongPtr, oldScene As LongPtr
+Private fonts(0 To 3) As LongPtr
+Private pixels(0 To 230399) As Long, ceiling(0 To 479) As Long
+Private bmi As BITMAPINFOHEADER
+Private camE As Double, camN As Double, camAlt As Double, camYaw As Double, camPitch As Double, camBank As Double
+Private sh As Double, ch As Double, cb As Double, sb As Double
+Public TerrainMS As Double, PanelMS As Double, FPS As Double
+Public Sub InitRenderer(ByVal hwnd As LongPtr)
+    SimHwnd = hwnd: windowDC = GetDC(hwnd)
+    If windowDC = 0 Then Err.Raise 5, , "Cannot acquire simulator DC"
+    Canvas = CreateCompatibleDC(windowDC): sceneDC = CreateCompatibleDC(windowDC)
+    canvasBitmap = CreateCompatibleBitmap(windowDC, 1000, 700)
+    sceneBitmap = CreateCompatibleBitmap(windowDC, 480, 480)
+    If Canvas = 0 Or sceneDC = 0 Or canvasBitmap = 0 Or sceneBitmap = 0 Then Err.Raise 7, , "GDI allocation failed"
+    oldCanvas = SelectObject(Canvas, canvasBitmap): oldScene = SelectObject(sceneDC, sceneBitmap)
+    fonts(0) = CreateFont(-15, 0, 0, 0, 400, 0, 0, 0, 1, 0, 0, 5, 0, "Consolas")
+    fonts(1) = CreateFont(-22, 0, 0, 0, 600, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe UI")
+    fonts(2) = CreateFont(-42, 0, 0, 0, 700, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe UI")
+    fonts(3) = CreateFont(-11, 0, 0, 0, 400, 0, 0, 0, 1, 0, 0, 5, 0, "Segoe UI")
+    bmi.biSize = 40: bmi.biWidth = 480: bmi.biHeight = -480: bmi.biPlanes = 1: bmi.biBitCount = 32
+End Sub
+Public Sub CloseRenderer()
+    Dim i As Long
+    If Canvas <> 0 Then SelectObject Canvas, oldCanvas
+    If sceneDC <> 0 Then SelectObject sceneDC, oldScene
+    If canvasBitmap <> 0 Then DeleteObject canvasBitmap
+    If sceneBitmap <> 0 Then DeleteObject sceneBitmap
+    For i = 0 To 3
+        If fonts(i) <> 0 Then DeleteObject fonts(i): fonts(i) = 0
+    Next
+    If Canvas <> 0 Then DeleteDC Canvas
+    If sceneDC <> 0 Then DeleteDC sceneDC
+    If windowDC <> 0 Then ReleaseDC SimHwnd, windowDC
+    Canvas = 0: sceneDC = 0: canvasBitmap = 0: sceneBitmap = 0: windowDC = 0: SimHwnd = 0
+End Sub
+Public Sub Box(ByVal dc As LongPtr, ByVal x As Long, ByVal y As Long, ByVal w As Long, ByVal h As Long, ByVal color As Long)
+    Dim r As RECT, brush As LongPtr
+    r.Left = x: r.Top = y: r.Right = x + w: r.Bottom = y + h
+    brush = CreateSolidBrush(color): FillRect dc, r, brush: DeleteObject brush
+End Sub
+Public Sub DrawText(ByVal dc As LongPtr, ByVal x As Long, ByVal y As Long, ByVal value As String, Optional ByVal size As Long = 0, Optional ByVal color As Long = 15198183)
+    Dim old As LongPtr
+    old = SelectObject(dc, fonts(size)): SetBkMode dc, 1: SetTextColor dc, color
+    TextOut dc, x, y, value, Len(value): SelectObject dc, old
+End Sub
+Public Sub DrawLine(ByVal dc As LongPtr, ByVal x As Long, ByVal y As Long, ByVal xx As Long, ByVal yy As Long, ByVal color As Long, Optional ByVal width As Long = 1)
+    Dim pen As LongPtr, old As LongPtr
+    pen = CreatePen(0, width, color): old = SelectObject(dc, pen)
+    MoveToEx dc, x, y, 0: LineTo dc, xx, yy
+    SelectObject dc, old: DeleteObject pen
+End Sub
+Public Sub Disk(ByVal dc As LongPtr, ByVal x As Long, ByVal y As Long, ByVal radius As Long, ByVal color As Long)
+    Dim brush As LongPtr, old As LongPtr, pen As LongPtr, oldP As LongPtr
+    brush = CreateSolidBrush(color): old = SelectObject(dc, brush)
+    pen = CreatePen(0, 1, color): oldP = SelectObject(dc, pen)
+    Ellipse dc, x - radius, y - radius, x + radius, y + radius
+    SelectObject dc, old: SelectObject dc, oldP: DeleteObject brush: DeleteObject pen
+End Sub
+Private Sub Poly(ByVal dc As LongPtr, ByRef p() As POINTAPI, ByVal n As Long, ByVal color As Long)
+    Dim brush As LongPtr, pen As LongPtr, old As LongPtr, oldP As LongPtr
+    brush = CreateSolidBrush(color): old = SelectObject(dc, brush)
+    pen = CreatePen(0, 1, color): oldP = SelectObject(dc, pen)
+    Polygon dc, p(0), n
+    SelectObject dc, old: SelectObject dc, oldP: DeleteObject brush: DeleteObject pen
+End Sub
+Private Sub Camera()
+    camE = Plane.east: camN = Plane.north: camAlt = Plane.altitude + 0.6
+    camYaw = Plane.heading: camPitch = Plane.pitch: camBank = Plane.bank
+    If CameraMode = 2 Then
+        camE = camE - Sin(camYaw) * 35: camN = camN - Cos(camYaw) * 35: camAlt = camAlt + 10
+        camPitch = camPitch - 0.05: camBank = camBank * 0.55
+    ElseIf CameraMode = 3 Then
+        camYaw = camYaw + 0.55: camPitch = -0.13: camBank = 0
+    End If
+    sh = Sin(camYaw): ch = Cos(camYaw): cb = Cos(camBank): sb = Sin(camBank)
+End Sub
+Public Sub RenderFrame(Optional ByVal menu As Boolean = False)
+    Dim t As Double, p(0 To 2) As POINTAPI, i As Long, px As Double, py As Double
+    t = Clock(): Camera
+    RenderTerrain
+    StretchDIBits sceneDC, 0, 0, 480, 480, 0, 0, 480, 480, pixels(0), bmi, 0, SRCCOPY
+    Airport
+    Box Canvas, 0, 0, 1000, 700, RGB(115, 149, 163)
+    For i = 0 To 2
+        px = -600: py = -600
+        If i = 1 Then px = 600
+        If i = 2 Then py = 600
+        p(i).x = 500 + px * cb + py * sb
+        p(i).y = 250 - px * sb + py * cb
+    Next
+    PlgBlt Canvas, p(0), sceneDC, 0, 0, 480, 480, 0, 0, 0
+    TerrainMS = (Clock() - t) * 1000: t = Clock()
+    If CameraMode = 2 Then DrawAircraft
+    If menu Then
+        Box Canvas, 0, 0, 1000, 94, RGB(12, 24, 31)
+        DrawText Canvas, 40, 15, "MERIDIAN", 2, RGB(236, 239, 224)
+        DrawText Canvas, 290, 35, "THE EXCEL FLIGHT EXPERIMENT  /  KFCI", 0, RGB(119, 207, 198)
+    Else
+        DrawPanel
+        If ShowMap Then DrawMap
+        DrawHUD
+        If Paused Then
+            Box Canvas, 260, 165, 480, 120, RGB(14, 25, 32)
+            DrawText Canvas, 300, 180, "FLIGHT PAUSED", 2
+            DrawText Canvas, 300, 239, "P resume  |  R reset  |  Esc menu"
+        End If
+        If Plane.crashed Then
+            Box Canvas, 270, 165, 460, 115, RGB(52, 25, 26)
+            DrawText Canvas, 300, 180, "FLIGHT ENDED", 2
+            DrawText Canvas, 300, 237, "Ground contact exceeded limits. R reset."
+        End If
+    End If
+    PanelMS = (Clock() - t) * 1000
+End Sub
+Private Sub RenderTerrain()
+    Dim x As Long, y As Long, index As Long, c As Long, py As Long, oldY As Long
+    Dim z As Double, dz As Double, ex As Double, ny As Double, dx As Double, dn As Double
+    Dim ix As Long, iy As Long, tx As Long, ty As Long, h As Double, horizon As Double, projectionScale As Double
+    Dim r As Long, g As Long, b As Long, fog As Double, light As Double, skyR As Long, skyG As Long, skyB As Long
+    Dim stride As Long, xx As Long, rowColor As Long, u As Double, shade As Double
+    skyR = 174: skyG = 196: skyB = 205
+    If Weather = 1 Then skyR = 234: skyG = 169: skyB = 126
+    If Weather = 4 Then skyR = 18: skyG = 28: skyB = 46
+    If Weather = 3 Or Weather = 5 Then skyR = 166: skyG = 178: skyB = 181
+    horizon = 240 + camPitch * 300
+    For y = 0 To 479
+        u = Clamp((horizon - y) / 270, 0, 1)
+        r = skyR * (1 - u * 0.58): g = skyG * (1 - u * 0.35): b = skyB * (1 - u * 0.12)
+        rowColor = r * 65536 + g * 256 + b
+        index = y * 480
+        For x = 0 To 479: pixels(index + x) = rowColor: Next
+    Next
+    'World-anchored clouds, projected into the same yaw/pitch camera.
+    If Weather <> 3 And Weather <> 4 Then Clouds horizon
+    For x = 0 To 479: ceiling(x) = 480: Next
+    stride = 1: If Quality = 0 Then stride = 2
+    z = 8
+    'All local DEM samples are below 118 m. Skip rays above the entire terrain.
+    If camAlt > 125 And horizon < 479 Then z = Clamp((camAlt - 125) * 300 / (480 - horizon), 8, Visibility)
+    Do While z < Visibility
+        projectionScale = 300 / z
+        ex = camE + sh * z - ch * z * 0.8
+        ny = camN + ch * z + sh * z * 0.8
+        dx = ch * z / 300: dn = -sh * z / 300
+        fog = Clamp(z / Visibility, 0, 1): fog = fog * fog
+        For x = 0 To 479 Step stride
+            ix = Int((ex + HalfWorld) / 20): iy = Int((HalfWorld - ny) / 20)
+            If ix >= 0 And ix < 1024 And iy >= 0 And iy < 1024 Then
+                index = ix + iy * 1024: h = Heights(index)
+                py = horizon - (h - camAlt) * projectionScale
+                oldY = ceiling(x)
+                If py < oldY Then
+                    tx = Int((ex + HalfWorld) / 5): ty = Int((HalfWorld - ny) / 5)
+                    c = Colors(tx + ty * 4096)
+                    If z > 1500 Then c = ColorLOD1(ix + iy * 1024)
+                    If z > 4500 Then c = ColorLOD2((ix \ 4) + (iy \ 4) * 256)
+                    shade = 1
+                    If ix < 1023 And iy < 1023 Then shade = Clamp(0.94 + (Heights(index + 1) - h) * 0.018 + (Heights(index + 1024) - h) * 0.012, 0.68, 1.15)
+                    light = shade
+                    If Weather = 1 Then light = light * 0.75
+                    If Weather = 4 Then light = light * 0.13
+                    r = Clamp(((c \ 65536) And 255) * light * (1 - fog) + skyR * fog, 0, 255)
+                    g = Clamp(((c \ 256) And 255) * light * (1 - fog) + skyG * fog, 0, 255)
+                    b = Clamp((c And 255) * light * (1 - fog) + skyB * fog, 0, 255)
+                    c = r * 65536 + g * 256 + b
+                    If py < 0 Then py = 0
+                    For y = py To oldY - 1
+                        pixels(x + y * 480) = c
+                        If stride = 2 Then pixels(x + 1 + y * 480) = c
+                    Next
+                    ceiling(x) = py
+                End If
+            End If
+            ex = ex + dx * stride: ny = ny + dn * stride
+        Next
+        dz = 5 + z * 0.024
+        If Quality = 0 Then dz = dz * 1.5
+        z = z + dz
+    Loop
+End Sub
+Private Sub Clouds(ByVal horizon As Double)
+    Dim i As Long, x As Long, y As Long, cx As Double, cy As Double, rx As Double, ry As Double
+    Dim angle As Double, d As Double, edge As Double, c As Long
+    For i = 0 To 15
+        angle = i * 2.399 + 0.2: d = 3800 + (i Mod 5) * 900
+        angle = Wrap(angle - camYaw + PI) - PI
+        If Abs(angle) < 1.15 Then
+            cx = 240 + Tan(angle) * 300: cy = horizon - (1300 - camAlt) * 300 / d
+            rx = 35 + (i Mod 4) * 16: ry = 5 + i Mod 5
+            c = &HDDDCD4: If Weather = 1 Then c = &HE8BC9D
+            For y = CLng(Clamp(cy - ry, 0, 479)) To CLng(Clamp(cy + ry, 0, 479))
+                edge = 1 - ((y - cy) / ry) ^ 2
+                If edge > 0 Then
+                    edge = Sqr(edge) * rx
+                    For x = CLng(Clamp(cx - edge, 0, 479)) To CLng(Clamp(cx + edge, 0, 479))
+                        pixels(x + y * 480) = c
+                    Next
+                End If
+            Next
+        End If
+    Next
+End Sub
+'Near-plane clip a runway-aligned rectangle before projecting into the unrolled scene.
+Private Sub GroundQuad(ByVal along As Double, ByVal lateral As Double, ByVal length As Double, ByVal width As Double, ByVal color As Long)
+    Dim ax(0 To 7) As Double, az(0 To 7) As Double, ah(0 To 7) As Double
+    Dim bx(0 To 7) As Double, bz(0 To 7) As Double, bh(0 To 7) As Double
+    Dim p(0 To 7) As POINTAPI, i As Long, j As Long, n As Long, u As Double
+    Dim s As Double, t As Double, east As Double, north As Double, de As Double, dn As Double
+    For i = 0 To 3
+        s = along - length / 2: t = lateral - width / 2
+        If i = 1 Or i = 2 Then s = along + length / 2
+        If i >= 2 Then t = lateral + width / 2
+        east = Sin(RunwayHeading) * s + Cos(RunwayHeading) * t
+        north = Cos(RunwayHeading) * s - Sin(RunwayHeading) * t
+        de = east - camE: dn = north - camN
+        ax(i) = de * ch - dn * sh: az(i) = de * sh + dn * ch
+        ah(i) = RunwayHeight(east, north) + 0.15 - camAlt
+    Next
+    For i = 0 To 3
+        j = (i + 3) Mod 4
+        If (az(i) > 3) <> (az(j) > 3) Then
+            u = (3 - az(j)) / (az(i) - az(j))
+            bx(n) = ax(j) + u * (ax(i) - ax(j)): bz(n) = 3
+            bh(n) = ah(j) + u * (ah(i) - ah(j)): n = n + 1
+        End If
+        If az(i) > 3 Then bx(n) = ax(i): bz(n) = az(i): bh(n) = ah(i): n = n + 1
+    Next
+    If n < 3 Then Exit Sub
+    For i = 0 To n - 1
+        p(i).x = Clamp(240 + bx(i) * 300 / bz(i), -16000, 16000)
+        p(i).y = Clamp(240 + camPitch * 300 - bh(i) * 300 / bz(i), -16000, 16000)
+    Next
+    Poly sceneDC, p, n, color
+End Sub
+Private Sub Airport()
+    Dim s As Double, c As Long
+    If Sqr(camE * camE + camN * camN) > Visibility Then Exit Sub
+    c = RGB(53, 57, 59): If Weather = 4 Then c = RGB(20, 23, 29)
+    For s = -808.265 To 808.265 Step 59.87
+        GroundQuad s, 0, 59.87, 30.48, c
+        GroundQuad s, -14.5, 59.87, 0.5, RGB(220, 222, 204)
+        GroundQuad s, 14.5, 59.87, 0.5, RGB(220, 222, 204)
+    Next
+    For s = -760 To 760 Step 60
+        GroundQuad s, 0, 25, 0.8, RGB(226, 227, 216)
+        If Weather = 4 Then
+            GroundQuad s, -16, 3, 2, RGB(255, 233, 172)
+            GroundQuad s, 16, 3, 2, RGB(255, 233, 172)
+        End If
+    Next
+    For s = -10 To 10 Step 4
+        GroundQuad -800, s, 20, 1.5, RGB(225, 225, 211)
+        GroundQuad 800, s, 20, 1.5, RGB(225, 225, 211)
+    Next
+End Sub
+Public Sub Present()
+    Dim r As RECT
+    If SimHwnd = 0 Then Exit Sub
+    GetClientRect SimHwnd, r
+    StretchBlt windowDC, 0, 0, r.Right, r.Bottom, Canvas, 0, 0, 1000, 700, SRCCOPY
+End Sub
+Private Sub DrawAircraft()
+    Dim p(0 To 7) As POINTAPI, i As Long, xx As Double, yy As Double
+    Dim coords As Variant
+    coords = Array(-5, -38, 8, -12, 110, 15, 112, 28, 9, 16, 7, 61, -8, 61, -10, 16)
+    For i = 0 To 7
+        xx = coords(i * 2): yy = coords(i * 2 + 1)
+        p(i).x = 500 + xx * Cos(Plane.bank) - yy * Sin(Plane.bank)
+        p(i).y = 335 + xx * Sin(Plane.bank) + yy * Cos(Plane.bank)
+    Next
+    Poly Canvas, p, 8, RGB(228, 229, 219)
+    For i = 0 To 7: p(i).x = 1000 - p(i).x: Next
+    Poly Canvas, p, 8, RGB(207, 214, 209)
+    DrawLine Canvas, 490, 352, 510, 352, RGB(175, 51, 35), 5
+    Disk Canvas, 500, 328, 8, RGB(46, 74, 89)
+End Sub
+Private Sub DrawHUD()
+    Box Canvas, 0, 0, 1000, 34, RGB(13, 26, 32)
+    DrawText Canvas, 16, 8, "MERIDIAN / KFCI", 0, RGB(106, 211, 197)
+    DrawText Canvas, 230, 8, Format(Plane.speed * 1.94384, "0") & " KT   " & Format(Plane.altitude * 3.28084, "0") & " FT   " & Format(Wrap(Plane.heading) * 180 / PI, "000") & " TRUE"
+    DrawText Canvas, 690, 8, Format(FPS, "0.0") & " FPS  |  " & IIf(Demo, "DEMONSTRATION", "MANUAL FLIGHT")
+    Box Canvas, 414, 34, 172, 24, RGB(15, 28, 34)
+    DrawText Canvas, 429, 39, "COMPASS " & Format(Wrap(Plane.heading + 10 * PI / 180) * 180 / PI, "000") & " M", 0, RGB(232, 217, 163)
+    If Plane.stalled Then DrawText Canvas, 410, 65, "STALL", 2, RGB(255, 127, 66)
+    If Plane.speed > 82 Then DrawText Canvas, 390, 65, "OVERSPEED", 2, RGB(255, 127, 66)
+    If CameraMode <> 0 And CameraMode <> 4 Then
+        Box Canvas, 0, 654, 1000, 46, RGB(13, 26, 32)
+        DrawText Canvas, 24, 670, "W/S POWER   ARROWS FLY   F FLAPS   C CAMERA   M MAP   P PAUSE   ESC MENU"
+    End If
+End Sub
+Private Sub Gauge(ByVal x As Long, ByVal y As Long, ByVal title As String, ByVal value As Double, ByVal maxValue As Double, ByVal units As String)
+    Dim i As Long, angle As Double, nx As Long, ny As Long
+    Disk Canvas, x, y, 69, RGB(50, 57, 61)
+    Disk Canvas, x, y, 64, RGB(5, 12, 17)
+    For i = 0 To 10
+        angle = (-140 + 28 * i) * PI / 180
+        DrawLine Canvas, x + Sin(angle) * 53, y - Cos(angle) * 53, x + Sin(angle) * 60, y - Cos(angle) * 60, RGB(188, 203, 204), 2
+        If i Mod 2 = 0 Then DrawText Canvas, x + Sin(angle) * 43 - 10, y - Cos(angle) * 43 - 5, Format(maxValue * i / 10, "0"), 3
+    Next
+    DrawText Canvas, x - 45, y - 26, title, 3, RGB(130, 168, 176)
+    angle = (-140 + 280 * Clamp(value / maxValue, 0, 1)) * PI / 180
+    DrawLine Canvas, x, y, x + Sin(angle) * 48, y - Cos(angle) * 48, RGB(241, 230, 185), 3
+    Disk Canvas, x, y, 5, RGB(196, 208, 208)
+    Box Canvas, x - 35, y + 27, 70, 19, RGB(23, 35, 40)
+    DrawText Canvas, x - 29, y + 28, Format(value, "0") & units, 3
+End Sub
+Private Sub HorizonGauge(ByVal x As Long, ByVal y As Long)
+    Dim row As Long, col As Long, yy As Long, xx As Long, span As Long, p(0 To 3) As POINTAPI
+    Disk Canvas, x, y, 69, RGB(50, 57, 61)
+    'Short scanlines clipped to circular instrument, horizon responds to pitch and bank.
+    Dim h As Double, ycut As Double, leftGround As Long, rightGround As Long
+    For row = -61 To 61
+        span = Sqr(61 * 61 - row * row)
+        Box Canvas, x - span, y + row, span * 2 + 1, 1, RGB(51, 121, 157)
+        If Abs(Sin(Plane.bank)) < 0.001 Then
+            If row * Cos(Plane.bank) > Plane.pitch * 130 Then Box Canvas, x - span, y + row, span * 2 + 1, 1, RGB(134, 87, 50)
+        Else
+            ycut = (Plane.pitch * 130 - row * Cos(Plane.bank)) / Sin(Plane.bank)
+            leftGround = -span: rightGround = span
+            If Sin(Plane.bank) > 0 Then leftGround = Clamp(ycut, -span, span + 1) Else rightGround = Clamp(ycut, -span - 1, span)
+            If rightGround >= leftGround Then Box Canvas, x + leftGround, y + row, rightGround - leftGround + 1, 1, RGB(134, 87, 50)
+        End If
+    Next
+    DrawLine Canvas, x - 40, y, x - 10, y, RGB(255, 209, 83), 3
+    DrawLine Canvas, x + 10, y, x + 40, y, RGB(255, 209, 83), 3
+    DrawLine Canvas, x - 10, y, x, y + 7, RGB(255, 209, 83), 3
+    DrawLine Canvas, x, y + 7, x + 10, y, RGB(255, 209, 83), 3
+    DrawText Canvas, x - 29, y + 39, "ATTITUDE", 3
+End Sub
+Private Sub DrawPanel()
+    If CameraMode <> 0 And CameraMode <> 4 Then Exit Sub
+    Box Canvas, 0, 490, 1000, 210, RGB(26, 35, 40)
+    Box Canvas, 0, 490, 1000, 8, RGB(11, 19, 24)
+    DrawLine Canvas, 0, 500, 1000, 500, RGB(74, 91, 97), 2
+    Gauge 85, 580, "AIRSPEED", Plane.speed * Exp(-Plane.altitude / 17000) * 1.94384, 160, "KT"
+    HorizonGauge 240, 580
+    Gauge 395, 580, "ALTITUDE", Plane.altitude * 3.28084, 10000, "FT"
+    Gauge 550, 580, "HEADING", Wrap(Plane.heading) * 180 / PI, 360, "T"
+    Gauge 705, 580, "ENGINE", Plane.rpm, 3000, "RPM"
+    Box Canvas, 798, 518, 184, 125, RGB(6, 17, 22)
+    DrawText Canvas, 812, 526, "VERTICAL " & Format(Plane.vertical * 196.85, "+0;-0;0"), 0, RGB(115, 215, 184)
+    DrawText Canvas, 812, 550, "FUEL " & Format(Plane.fuel / 3.78541, "0.0") & " GAL"
+    DrawText Canvas, 812, 574, "POWER " & Format(Plane.throttle, "0%")
+    DrawText Canvas, 812, 598, "FLAP " & Choose(Plane.flaps + 1, "0", "10", "25", "40") & "  TRIM " & Format(Plane.trim, "0.00")
+    DrawText Canvas, 24, 658, "OIL " & Format(Plane.oilTemp, "0") & " C / " & Format(Plane.oilPressure, "0") & " PSI", 0, RGB(156, 181, 184)
+    DrawText Canvas, 302, 658, "TURN " & Format(Plane.turnRate * 180 / PI, "+0.0;-0.0;0.0") & " DEG/S", 0, RGB(156, 181, 184)
+    DrawLine Canvas, 520, 668, 610, 668, RGB(156, 181, 184), 2
+    Disk Canvas, 565 + Plane.slip * 40, 668, 6, RGB(224, 214, 180)
+    DrawText Canvas, 652, 658, "PA-28-161 / WARRIOR II", 0, RGB(156, 181, 184)
+    DrawText Canvas, 24, 682, "ARROWS FLY  W/S POWER  F FLAPS  C VIEW  M MAP  V MUTE  P PAUSE  ESC MENU", 3, RGB(130, 153, 158)
+    If CameraMode = 4 Then StretchBlt Canvas, 0, 280, 1000, 420, Canvas, 0, 490, 1000, 210, SRCCOPY
+End Sub
+Private Sub DrawMap()
+    Dim x As Long, y As Long, ix As Long, iy As Long, c As Long, px As Long, py As Long
+    Static mapPixels(0 To 1599) As Long
+    Dim mapInfo As BITMAPINFOHEADER
+    Box Canvas, 795, 48, 195, 195, RGB(9, 20, 26)
+    For y = 0 To 39
+        For x = 0 To 39
+            ix = Clamp((Plane.east + (x * 4 - 80) * 40 + HalfWorld) / 20, 0, 1023)
+            iy = Clamp((HalfWorld - Plane.north + (y * 4 - 80) * 40) / 20, 0, 1023)
+            mapPixels(x + y * 40) = ColorLOD1(ix + iy * 1024)
+        Next
+    Next
+    mapInfo.biSize = 40: mapInfo.biWidth = 40: mapInfo.biHeight = -40
+    mapInfo.biPlanes = 1: mapInfo.biBitCount = 32
+    StretchDIBits Canvas, 813, 67, 160, 160, 0, 0, 40, 40, mapPixels(0), mapInfo, 0, SRCCOPY
+    px = 893 - Plane.east / 40: py = 147 + Plane.north / 40
+    If px > 835 And px < 951 And py > 89 And py < 205 Then
+        DrawLine Canvas, px - Sin(RunwayHeading) * 21, py + Cos(RunwayHeading) * 21, px + Sin(RunwayHeading) * 21, py - Cos(RunwayHeading) * 21, RGB(255, 210, 75), 2
+    End If
+    If px > 813 And px < 973 And py > 67 And py < 227 Then Disk Canvas, px, py, 3, RGB(255, 210, 75)
+    DrawLine Canvas, 893, 147, 893 + Sin(Plane.heading) * 18, 147 - Cos(Plane.heading) * 18, RGB(255, 245, 222), 3
+    Disk Canvas, 893, 147, 3, RGB(255, 80, 50)
+    DrawText Canvas, 810, 228, "N UP    6.4 KM", 3
+End Sub

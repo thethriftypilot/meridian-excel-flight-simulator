@@ -1,0 +1,13 @@
+ExcelFlightSimulator.zip
+ExcelFlightSimulator/*.xlsm
+ExcelFlightSimulator/PACKAGE_SHA256.json
+ExcelFlightSimulator/Assets/Terrain/*.bin
+ExcelFlightSimulator/Assets/Terrain/*.tif
+ExcelFlightSimulator/Assets/Terrain/*.jpg
+ExcelFlightSimulator/Assets/Terrain/*.bmp
+ExcelFlightSimulator/Tests/*.bmp
+ExcelFlightSimulator/Tests/last-flight.csv
+~$*
+__pycache__/
+*.pyc
+.publish-state.json

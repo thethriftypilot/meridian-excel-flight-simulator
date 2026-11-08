@@ -1,0 +1,75 @@
+{
+  "checks": [
+    {
+      "test": "height.bin",
+      "status": "PASS",
+      "detail": "Expected 4194304 bytes"
+    },
+    {
+      "test": "color.bin",
+      "status": "PASS",
+      "detail": "Expected 67108864 bytes"
+    },
+    {
+      "test": "color-lod1.bin",
+      "status": "PASS",
+      "detail": "Expected 4194304 bytes"
+    },
+    {
+      "test": "color-lod2.bin",
+      "status": "PASS",
+      "detail": "Expected 262144 bytes"
+    },
+    {
+      "test": "height.bin SHA256",
+      "status": "PASS",
+      "detail": "63ec7333be9df24fc9f4c264f6de8e552d3512104d6bd2bffbbdd22d6be8d49f"
+    },
+    {
+      "test": "color.bin SHA256",
+      "status": "PASS",
+      "detail": "65b7dbe9231b1decce0a3360837a36aa29cbad8d49f5d9a09f3ab64c0a54ab26"
+    },
+    {
+      "test": "finite DEM",
+      "status": "PASS",
+      "detail": "Min -98.744, max 117.366 m; negative quarry/low-area samples retained"
+    },
+    {
+      "test": "missing data",
+      "status": "PASS",
+      "detail": "No requested no-data sentinel present"
+    },
+    {
+      "test": "FAA northwest field elevation",
+      "status": "PASS",
+      "detail": "Nearest DEM threshold sample 71.946 m; dated FAA field elevation 71.933 m"
+    },
+    {
+      "test": "elevation.tif.json export",
+      "status": "PASS",
+      "detail": "Export extent and success metadata retained"
+    },
+    {
+      "test": "imagery_0_0.jpg.json export",
+      "status": "PASS",
+      "detail": "Export extent and success metadata retained"
+    },
+    {
+      "test": "imagery_0_1.jpg.json export",
+      "status": "PASS",
+      "detail": "Export extent and success metadata retained"
+    },
+    {
+      "test": "imagery_1_0.jpg.json export",
+      "status": "PASS",
+      "detail": "Export extent and success metadata retained"
+    },
+    {
+      "test": "imagery_1_1.jpg.json export",
+      "status": "PASS",
+      "detail": "Export extent and success metadata retained"
+    }
+  ],
+  "scope": "Binary and source-package checks only. These do not establish VBA compilation or rendering."
+}
