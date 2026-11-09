@@ -10,6 +10,8 @@ All simulation and rendering decisions execute inside Excel. No external graphic
 
 ## Fly
 
+Visit [Meridian on The Thrifty Pilot](https://www.thethriftypilot.com/meridian) for screenshots, requirements and setup instructions, or browse the [Pilot Tools directory](https://www.thethriftypilot.com/aviation-software).
+
 Download the complete package from [Releases](https://github.com/thethriftypilot/meridian-excel-flight-simulator/releases), extract it, and open `ExcelFlightSimulator.xlsm` in 64-bit Windows desktop Excel. Keep the Assets folder beside it. Authorize macros for this file through your normal trusted-file process, then choose **OPEN FLIGHT SIMULATOR** → **START FLIGHT** or **WATCH DEMONSTRATION**.
 
 [Pilot guide](ExcelFlightSimulator/Documentation/README.md) · [Controls](ExcelFlightSimulator/Documentation/CONTROLS.md) · [Architecture](ExcelFlightSimulator/Documentation/ARCHITECTURE.md) · [Measured performance](ExcelFlightSimulator/Documentation/PERFORMANCE.md) · [Verification](ExcelFlightSimulator/Documentation/TESTING.md) · [Delivery audit](ExcelFlightSimulator/Documentation/REQUIREMENTS.md)
