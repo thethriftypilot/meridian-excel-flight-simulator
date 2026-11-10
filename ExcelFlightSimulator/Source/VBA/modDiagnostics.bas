@@ -29,6 +29,7 @@ Public Function RunSoak(Optional ByVal seconds As Double = 1200) As String
     errText = "load world": LoadWorld
     errText = "reset flight": ResetFlight 1: SetWeather 0
     Quality = 0: Volume = 0.2: Muted = False: Paused = False: Demo = True
+    StartRecording
     errText = "show form": frmFlight.Show vbModeless: DoEvents
     errText = "renderer init": InitRenderer FindWindow(vbNullString, "Meridian | Excel Flight Simulator")
     errText = "audio init": StartAudio: Running = True
@@ -44,6 +45,7 @@ Public Function RunSoak(Optional ByVal seconds As Double = 1200) As String
         accumulator = accumulator + Clamp(current - previous, 0, 0.2): previous = current
         Do While accumulator >= 1# / 60
             Call DemoControls: StepFlight 1# / 60: accumulator = accumulator - 1# / 60
+            RecordFrame
         Loop
         If Plane.crashed Or Paused Or Plane.altitude < 100 Or Plane.altitude > 2000 Then Err.Raise 5, , "Soak flight left stable envelope"
         'Cycle through every preset while using the actual demo controller and five views.
@@ -62,11 +64,14 @@ Public Function RunSoak(Optional ByVal seconds As Double = 1200) As String
     Loop
     If Clock() - start < seconds Then Err.Raise 5, , "Soak interrupted before requested duration"
     If AudioBuffers < seconds * 4 Then Err.Raise 5, , "Audio refill stalled: " & AudioDebug()
+    If SampleCount < Clamp(seconds * 8, 1, 18001) Then Err.Raise 5, , "Flight recorder stalled"
     RunSoak = "PASS | Native wall-clock soak | " & Format(Clock() - start, "0.0") & " s; " & frames & " frames; mean " & Format(frames / (Clock() - start), "0.00") & " FPS; peak working set " & Format(peakMB, "0.0") & " MB (initial " & Format(initialMB, "0.0") & "); peak GDI " & peakGDI & " (initial " & initialGDI & "); audio buffers " & AudioBuffers
+    RunSoak = RunSoak & "; recorded samples " & SampleCount
     SaveFrame ThisWorkbook.Path & "\Tests\soak-final.bmp"
 cleanup:
     If opened Then Close #f
     Running = False: StopAudio: CloseRenderer: Unload frmFlight
+    FinishRecording
     f = FreeFile: Open ThisWorkbook.Path & "\Tests\soak-result.txt" For Output As #f
     Print #f, RunSoak: Close #f
     Exit Function

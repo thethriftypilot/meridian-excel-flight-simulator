@@ -4,12 +4,12 @@ Private Sub UserForm_Initialize()
     With cboScenario
         .AddItem "KFCI runway departure"
         .AddItem "Richmond scenic flight"
-        .AddItem "Runway 15 approach"
+        .AddItem "Landing challenge / Runway 15"
         .AddItem "Sunset flight"
         .AddItem "Low visibility"
         .AddItem "Night flight"
         .AddItem "Apron / taxi"
-        .AddItem "Crosswind landing"
+        .AddItem "Landing challenge / Crosswind"
         .ListIndex = 1
     End With
     With cboWeather
@@ -28,6 +28,7 @@ Private Sub UserForm_Initialize()
 End Sub
 Private Sub UserForm_Activate()
     MenuOpen = True
+    btnReplay.Enabled = (SampleCount >= 2)
 End Sub
 Private Sub ConfigureFlight()
     Scenario = cboScenario.ListIndex
@@ -52,6 +53,12 @@ Private Sub btnDemo_Click()
 End Sub
 Private Sub btnClose_Click()
     Unload Me
+End Sub
+Private Sub btnReplay_Click()
+    WatchReplay
+End Sub
+Private Sub btnDebrief_Click()
+    ShowDebrief
 End Sub
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
     StopMenuAudio

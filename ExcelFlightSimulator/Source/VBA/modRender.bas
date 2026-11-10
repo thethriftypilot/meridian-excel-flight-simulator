@@ -121,9 +121,10 @@ Public Sub RenderFrame(Optional ByVal menu As Boolean = False)
         DrawHUD
         If Paused Then
             Box Canvas, 260, 165, 480, 120, RGB(14, 25, 32)
-            DrawText Canvas, 300, 180, "FLIGHT PAUSED", 2
-            DrawText Canvas, 300, 239, "P resume  |  R reset  |  Esc menu"
+            DrawText Canvas, 300, 180, IIf(ReplayActive, "REPLAY PAUSED", "FLIGHT PAUSED"), 2
+            DrawText Canvas, 300, 239, IIf(ReplayActive, "P play  |  J/L seek  |  R restart  |  Esc menu", "P resume  |  R reset  |  Esc menu")
         End If
+        DrawReviewHUD
         If Plane.crashed Then
             Box Canvas, 270, 165, 460, 115, RGB(52, 25, 26)
             DrawText Canvas, 300, 180, "FLIGHT ENDED", 2

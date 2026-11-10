@@ -1,1 +1,1 @@
-PASS | Native wall-clock soak | 1200.0 s; 29433 frames; mean 24.53 FPS; peak working set 294.5 MB (initial 253.8); peak GDI 361 (initial 359); audio buffers 12003
+PASS | Native wall-clock soak | 120.0 s; 2560 frames; mean 21.33 FPS; peak working set 262.3 MB (initial 250.9); peak GDI 360 (initial 355); audio buffers 1204; recorded samples 1200

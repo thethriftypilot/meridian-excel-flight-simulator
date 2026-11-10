@@ -1,6 +1,29 @@
 MERIDIAN / NATIVE EXCEL VBA TEST RUN
-2026-11-08 16:19:44
+2026-11-09 21:36:41
 PASS | A Compilation | Native VBA execution reached test runner
+PASS | Review perfect rubric
+PASS | Review rubric bounded
+PASS | Review softness monotonic
+PASS | Review runway coordinates
+PASS | Review contact captured before vertical reset
+PASS | Review controlled stop completes
+PASS | Review personal best stored
+PASS | Review assisted cannot rank
+PASS | Review lower score preserves personal best
+PASS | Review opposite runway direction excluded
+PASS | Review excursion stays invalid after return
+PASS | Review bounce excluded
+PASS | Review crash excluded
+PASS | Review aborted challenge unscored
+PASS | Review replay available
+PASS | Review heading interpolates shortest arc
+PASS | Review position interpolation
+PASS | Review pause freezes replay
+PASS | Review replay ignores flight controls
+PASS | Review seek clamps start
+PASS | Review end pauses without overrunning
+PASS | Review replay restores live state
+PASS | Review recorder bounded
 PASS | C Cached hillshade | Resident lighting cache available
 PASS | C Terrain | DEM and texture binary lengths validated
 PASS | N Geography | Projection origin round trip
@@ -12,6 +35,7 @@ PASS | O Repeatability | Deterministic 20-minute replay
 PASS | G Touchdown/rollout | Controlled contact and 15 s braking; approach/flare requires separate pilot test
 PASS | G Hard landing | 8 m/s descent rejected
 PASS | G Approach/flare | Guidance-generated controls from approach scenario; touchdown 0.57 m/s; along=-625.8 m
+PASS | Review native debrief | Two charts from real recorded approach; assisted result
 PASS | Weather ground track | 4 m/s east wind changes position 8 m in 2 s
 PASS | E Fuel exhaustion | Engine cannot regenerate idle RPM after empty tank
 PASS | E Engine shutdown | No fuel burn and RPM decays when engine is off
@@ -19,6 +43,8 @@ PASS | G Building collision | Generalized hangars collide below roof, clear over
 PASS | N Groundspeed | Wind affects groundspeed indication
 PASS | Weather rain | Rain preset changes visibility, wind, turbulence, drawing and audio
 PASS | B/J Launch 1 | Native UserForm, terrain and cockpit presented
+PASS | Review renderer playback starts | Recorded approach available
+PASS | Review replay cameras | Five camera views rendered from recorded aircraft states
 PASS | H Airspeed | Isolated state change updates the corresponding framebuffer region
 PASS | H Attitude | Isolated state change updates the corresponding framebuffer region
 PASS | H Altimeter | Isolated state change updates the corresponding framebuffer region
@@ -42,16 +68,16 @@ PASS | D Pause | Short P event retained
 PASS | D Resume | Second P resumes
 PASS | D Engine off | E cuts engine
 PASS | D Engine restart | E restarts with fuel available
-PASS | L Benchmark | 120 frames: 15.29 FPS; terrain 59.84 ms; panel 3.94 ms. Uncapped native renderer, balanced.
-PASS | L Performance preset | 120 frames: 22.82 FPS; uncapped with 2-column spans
-PASS | L Moving map | Performance preset + map: 21.64 FPS over 30 frames
+PASS | L Benchmark | 120 frames: 15.44 FPS; terrain 59.51 ms; panel 3.72 ms. Uncapped native renderer, balanced.
+PASS | L Performance preset | 120 frames: 18.98 FPS; uncapped with 2-column spans
+PASS | L Moving map | Performance preset + map: 16.72 FPS over 30 frames
 PASS | H Camera/weather matrix | All 5 views x 7 weather presets rendered; banked cockpit and instrument captures saved
 PASS | I Audio | PCM 22.05 kHz / 4 buffers; synthesized buffers=23
 PASS | I Menu audio | Original WAV accepted by asynchronous PlaySoundW
 PASS | I Audio events | Startup and touchdown cues reached original PCM mixer
 PASS | B/J Launch 2 | Native UserForm, terrain and cockpit presented
 PASS | B/J Launch 3 | Native UserForm, terrain and cockpit presented
-PASS | K GDI cleanup | 3 cycles: before=405 after=407; includes Office UserForm cache
+PASS | K GDI cleanup | 3 cycles: before=444 after=450; includes Office UserForm cache
 PARTIAL | D Physical controls | Queued native control tests passed if reported above; UI pause/resume checked separately; sustained physical piloting not fully tested
 PARTIAL | H Instruments | All 13 displayed bindings checked through framebuffer changes; independent calibration against aircraft data not performed
 

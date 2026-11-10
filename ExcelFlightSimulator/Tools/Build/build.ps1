@@ -28,7 +28,7 @@ try {
     $menu.Name = 'frmMenu'
     $menu.Properties.Item('Caption').Value = 'MERIDIAN - The Excel Flight Experiment'
     $menu.Properties.Item('Width').Value = 760
-    $menu.Properties.Item('Height').Value = 550
+    $menu.Properties.Item('Height').Value = 610
     $menu.Properties.Item('BackColor').Value = 2036492
     $script:fontCode = ''
     function Add-Control($kind,$name,$caption,$x,$y,$w,$h,$size=12,$fore=15198183,$back=2036492) {
@@ -60,7 +60,9 @@ try {
     [void](Add-Control 'ComboBox' 'cboSensitivity' '' 225 354 225 25 11 2036492 15198183)
     [void](Add-Control 'CommandButton' 'btnStart' 'START FLIGHT' 30 414 310 48 17 2036492 12963447)
     [void](Add-Control 'CommandButton' 'btnDemo' 'WATCH DEMONSTRATION' 360 414 350 48 16 15198183 4274474)
-    [void](Add-Control 'Label' 'lblHint' 'Arrow keys fly / W S power / P pause / Esc menu. Experimental simulation.' 30 480 650 22 10 11908508)
+    [void](Add-Control 'CommandButton' 'btnReplay' 'REPLAY LAST FLIGHT' 30 474 310 38 13 15198183 4274474)
+    [void](Add-Control 'CommandButton' 'btnDebrief' 'VIEW DEBRIEF' 360 474 350 38 13 15198183 4274474)
+    [void](Add-Control 'Label' 'lblHint' 'v0.4 / Arrow keys fly / W S power / P pause / Esc menu. Experimental simulation.' 30 535 690 22 10 11908508)
     [void](Add-Control 'CommandButton' 'btnClose' 'EXIT' 660 18 60 26 10 15198183 4274474)
     $menuCode=[IO.File]::ReadAllText((Join-Path $root 'Source/VBA/frmMenu.code'))
     $menuCode=$menuCode.Replace('Private Sub UserForm_Initialize()',"Private Sub UserForm_Initialize()`r`n$script:fontCode")
@@ -82,6 +84,12 @@ try {
         Write-Output $result
         $book.Save()
         if ($result -match '(?m)^FAIL') { throw 'Native tests failed. Inspect Tests/results.txt before distributing this build.' }
+        # Test-flight reports are retained as PDF evidence, not shipped as the user's history.
+        foreach ($name in @('Debrief','Flight data','Personal bests')) {
+            $book.Worksheets.Item($name).Delete()
+        }
+        $book.Worksheets.Item('Launch').Activate()
+        $book.Save()
     }
     # Export actual forms including binary designer resources for reproducibility.
     $flight.Export((Join-Path $root 'Source/VBA/frmFlight.frm'))

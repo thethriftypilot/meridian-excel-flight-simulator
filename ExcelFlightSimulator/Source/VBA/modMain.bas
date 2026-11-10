@@ -31,6 +31,7 @@ Public Sub BeginFlight(ByVal automatic As Boolean)
     Demo = automatic: Paused = False
     If Demo Then Scenario = 1
     ResetFlight Scenario
+    StartRecording
     frmMenu.Hide: MenuOpen = False
     frmFlight.StartUpPosition = 0
     frmFlight.Left = Application.Left: frmFlight.Top = Application.Top
@@ -58,7 +59,11 @@ Public Sub BeginFlight(ByVal automatic As Boolean)
             Do While accumulator >= 1# / 60
                 If Demo Then DemoControls
                 StepFlight 1# / 60
+                UpdateChallenge 1# / 60
+                RecordFrame
+                If ChallengeComplete Then Paused = True
                 accumulator = accumulator - 1# / 60
+                If Paused Then accumulator = 0: Exit Do
             Loop
         Else
             accumulator = 0
@@ -82,6 +87,8 @@ Public Sub BeginFlight(ByVal automatic As Boolean)
     Loop
 cleanup:
     Running = False: Call StopAudio: StopMenuAudio: CloseRenderer
+    FinishRecording
+    WriteDebrief
     If logOpened Then Close #logFile
     TestFlightSeconds = 0
     Unload frmFlight
@@ -91,6 +98,7 @@ cleanup:
         Application.StatusBar = oldStatus
     End If
     If Len(errText) > 0 Then MsgBox errText, vbExclamation, "Meridian"
+    If Len(ReviewError) > 0 Then MsgBox ReviewError, vbExclamation, "Meridian debrief"
     frmMenu.Show vbModeless
     Exit Sub
 failed:

@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmMenu 
    Caption         =   "MERIDIAN - The Excel Flight Experiment"
-   ClientHeight    =   10410
+   ClientHeight    =   11610
    ClientLeft      =   120
    ClientTop       =   465
    ClientWidth     =   14955
@@ -29,6 +29,8 @@ Private Sub UserForm_Initialize()
     cboSensitivity.Font.name = "Segoe UI": cboSensitivity.Font.size = 11
     btnStart.Font.name = "Segoe UI": btnStart.Font.size = 17
     btnDemo.Font.name = "Segoe UI": btnDemo.Font.size = 16
+    btnReplay.Font.name = "Segoe UI": btnReplay.Font.size = 13
+    btnDebrief.Font.name = "Segoe UI": btnDebrief.Font.size = 13
     lblHint.Font.name = "Segoe UI": lblHint.Font.size = 10
     btnClose.Font.name = "Segoe UI": btnClose.Font.size = 10
 
@@ -36,12 +38,12 @@ Private Sub UserForm_Initialize()
     With cboScenario
         .AddItem "KFCI runway departure"
         .AddItem "Richmond scenic flight"
-        .AddItem "Runway 15 approach"
+        .AddItem "Landing challenge / Runway 15"
         .AddItem "Sunset flight"
         .AddItem "Low visibility"
         .AddItem "Night flight"
         .AddItem "Apron / taxi"
-        .AddItem "Crosswind landing"
+        .AddItem "Landing challenge / Crosswind"
         .ListIndex = 1
     End With
     With cboWeather
@@ -60,6 +62,7 @@ Private Sub UserForm_Initialize()
 End Sub
 Private Sub UserForm_Activate()
     MenuOpen = True
+    btnReplay.Enabled = (SampleCount >= 2)
 End Sub
 Private Sub ConfigureFlight()
     Scenario = cboScenario.ListIndex
@@ -84,6 +87,12 @@ Private Sub btnDemo_Click()
 End Sub
 Private Sub btnClose_Click()
     Unload Me
+End Sub
+Private Sub btnReplay_Click()
+    WatchReplay
+End Sub
+Private Sub btnDebrief_Click()
+    ShowDebrief
 End Sub
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
     StopMenuAudio

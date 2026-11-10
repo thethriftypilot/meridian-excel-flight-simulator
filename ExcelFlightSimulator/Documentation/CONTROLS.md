@@ -1,5 +1,7 @@
 # Controls
 
+v0.4 adds **REPLAY LAST FLIGHT** and **VIEW DEBRIEF** to the menu. In replay, **J/L** seek five seconds, **K** cycles speed, **P** pauses, **R** restarts and **C** changes camera. Flight controls are ignored. [Challenges and replay](CHALLENGES.md).
+
 | Key | Action |
 |---|---|
 | Down / Up | Pull elevator / push elevator |

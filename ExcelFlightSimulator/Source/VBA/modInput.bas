@@ -38,9 +38,26 @@ Public Sub ApplyInput(ByVal dt As Double)
     If Pressed(67) Then CameraMode = (CameraMode + 1) Mod 5
     If Pressed(77) Then ShowMap = Not ShowMap
     If Pressed(86) Then Muted = Not Muted
-    If Pressed(82) Then ResetFlight Scenario: Paused = False
+    If ReplayActive Then
+        If Pressed(74) Then SeekReplay ReplayTime - 5
+        If Pressed(76) Then SeekReplay ReplayTime + 5
+        If Pressed(75) Then
+            ReplayRate = ReplayRate * 2
+            If ReplayRate > 2 Then ReplayRate = 0.5
+        End If
+        If Pressed(82) Then SeekReplay 0: Paused = False
+        Exit Sub
+    End If
+    If Pressed(82) Then
+        Call FinishRecording: WriteDebrief
+        ResetFlight Scenario: Paused = False
+        If Running Then StartRecording
+    End If
     If Pressed(70) Then Plane.flaps = (Plane.flaps + 1) Mod 4: TriggerSound 3
-    If Pressed(84) Then Demo = Not Demo
+    If Pressed(84) Then
+        Demo = Not Demo
+        If Recording Then Assisted = True
+    End If
     If Pressed(69) And Not Paused Then
         Plane.engineRunning = Not Plane.engineRunning And Plane.fuel > 0
         If Plane.engineRunning Then TriggerSound 1 Else TriggerSound 3

@@ -45,3 +45,7 @@ The airport includes a generalized apron, taxiway and collidable hangars; the ch
 - Emergency stop: Esc normally exits. Excel's Ctrl+Break interrupts VBA if necessary; run `EmergencyCleanup` from Alt+F8 afterward to release audio and graphics resources.
 
 - Rebuilding requires temporary **Trust access to the VBA project object model**. Running the finished workbook does not require this setting. Restore it to your preferred setting after development.
+# v0.4: challenges and replay
+
+Choose a landing challenge in the menu, complete your approach and stop on the runway. Return with Esc for **VIEW DEBRIEF** and **REPLAY LAST FLIGHT**. The debrief includes touchdown measurements, a flight-path chart, altitude profile and local personal bests. [Read the scoring rules, replay controls and recording limits](CHALLENGES.md).
+

@@ -121,6 +121,7 @@ Public Sub StepFlight(ByVal dt As Double)
     floor = Ground(Plane.east, Plane.north) + 1.2
     If Plane.altitude <= floor Then
         If Not wasGrounded Then
+            RegisterContact
             Touchdown = Abs(Plane.vertical)
             TriggerSound 2, Clamp(Touchdown / 3.2, 0.15, 1)
             If Plane.vertical < -3.2 Or Abs(Plane.bank) > 0.2 Or Plane.pitch < -0.09 Or Plane.pitch > 0.28 Then Plane.crashed = True

@@ -1,4 +1,6 @@
-# Known limitations — release 0.3
+# Known limitations — release 0.4
+
+- Replay retains up to 18,001 samples in memory (about 30 minutes) and is silent. It is lost when starting another flight or closing Excel. Debrief sheets and personal bests persist only when the workbook is saved. Scores are local entertainment metrics, not aircraft-performance validation. Physical joystick support and editable bindings remain future work.
 
 This is a playable native Excel simulator with a documented delivery audit in REQUIREMENTS.md. Optional hardware integrations and commercial-simulator fidelity are not implied.
 

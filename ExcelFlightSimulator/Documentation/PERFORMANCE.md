@@ -1,3 +1,7 @@
+# v0.4 measurements
+
+The final native run measured 15.44 FPS in Balanced, 18.98 FPS in Performance and 16.72 FPS with the moving map. A separate two-minute continuous flight with recording enabled averaged 21.33 FPS and captured 1,200 samples. See Tests/results.txt and Tests/soak-result.txt. The longer measurements below are from v0.3.
+
 # Measured performance — v0.3
 
 Measured on 2026-11-08 in native 64-bit Excel 16 / Office 2021 on Windows 11 Home 10.0.26100, Intel Core i7-8700K @ 3.70 GHz. Other applications were open. Results are local observations, not hardware-independent promises.
@@ -17,7 +21,7 @@ Measured on 2026-11-08 in native 64-bit Excel 16 / Office 2021 on Windows 11 Hom
 | Audio buffers synthesized during continuous run | 12,003 |
 | Separate three-launch cleanup check | 405 → 407 GDI objects |
 
-The continuous run passed without a crash, invalid flight envelope or stalled audio refill. Working set increased by about 41 MB and then remained within 0.1 MB over the final five minutes. This is bounded evidence of a plateau, not a claim that every allocation is leak-free. Raw completion details are in `Tests/soak-result.txt`; the final workbook test run is in `Tests/results.txt`.
+The continuous run passed without a crash, invalid flight envelope or stalled audio refill. Working set increased by about 41 MB and then remained within 0.1 MB over the final five minutes. This is bounded evidence of a plateau, not a claim that every allocation is leak-free. Raw completion details are in `Tests/soak-result-v03.txt`; the final workbook test run is in `Tests/results.txt`.
 
 ## What the measurements cover
 

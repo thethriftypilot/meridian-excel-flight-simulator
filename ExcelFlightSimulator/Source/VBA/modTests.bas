@@ -28,6 +28,7 @@ Public Function RunSelfTests() As String
     results = "MERIDIAN / NATIVE EXCEL VBA TEST RUN" & vbCrLf & Format(Now, "yyyy-mm-dd hh:nn:ss") & vbCrLf
     Check "A Compilation", True, "Native VBA execution reached test runner"
     LoadWorld
+    results = results & RunReviewTests()
     Check "C Cached hillshade", UBound(TerrainShade) = 1048575 And TerrainShade(0) >= 0.68 And TerrainShade(0) <= 1.15, "Resident lighting cache available"
     Check "C Terrain", UBound(Heights) = 1048575 And UBound(Colors) = 16777215, "DEM and texture binary lengths validated"
     Check "N Geography", Abs(Latitude(0) - 37.4065) < 0.000001 And Abs(Longitude(0) + 77.5248333333) < 0.000001, "Projection origin round trip"
@@ -63,7 +64,7 @@ Public Function RunSelfTests() As String
     ResetFlight 2: Plane.east = 0: Plane.north = 0: Plane.altitude = Ground(0, 0) + 1.21
     Plane.vertical = -8: StepFlight 1# / 60
     Check "G Hard landing", Plane.crashed, "8 m/s descent rejected"
-    SetWeather 0: ResetFlight 2
+    SetWeather 0: ResetFlight 2: Demo = False: StartRecording
     For i = 1 To 15000
         distance = -838.2 - AlongRunway(Plane.east, Plane.north)
         targetAlt = RunwayHeight(-838.2 * Sin(RunwayHeading), -838.2 * Cos(RunwayHeading)) + 1.2 + Clamp(distance, 0, 5000) * 0.0524
@@ -74,9 +75,19 @@ Public Function RunSelfTests() As String
         Plane.elevator = Clamp((targetPitch - 0.035) / 0.35, -0.8, 0.8)
         Plane.throttle = Clamp(0.28 + (34 - Plane.speed) * 0.06, 0, 1)
         StepFlight 1# / 60
+        UpdateChallenge 1# / 60: RecordFrame
         If Plane.grounded Or Plane.crashed Then Exit For
     Next
     Check "G Approach/flare", Plane.grounded And Not Plane.crashed And OnRunway(Plane.east, Plane.north), "Guidance-generated controls from approach scenario; touchdown " & Format(Touchdown, "0.00") & " m/s; along=" & Format(AlongRunway(Plane.east, Plane.north), "0.0") & " m"
+    Assisted = True 'Guidance-generated test flight is never eligible for a personal best.
+    Plane.throttle = 0: Plane.brake = True: Plane.elevator = 0
+    For i = 1 To 1200
+        StepFlight 1# / 60: UpdateChallenge 1# / 60: RecordFrame
+        If ChallengeComplete Then Exit For
+    Next
+    Call FinishRecording: WriteDebrief
+    Check "Review native debrief", Len(ReviewError) = 0 And ThisWorkbook.Worksheets("Debrief").ChartObjects.Count = 2, ReviewError & "Two charts from real recorded approach; assisted result"
+    ThisWorkbook.Worksheets("Debrief").ExportAsFixedFormat xlTypePDF, ThisWorkbook.Path & "\Tests\debrief-v04.pdf"
     ResetFlight 1: SetWeather 2
     For i = 1 To 120: StepFlight 1# / 60: Next
     replay = Plane.east
@@ -103,6 +114,14 @@ Public Function RunSelfTests() As String
         t = Clock(): Call RenderFrame: Present
         Check "B/J Launch " & j, Canvas <> 0, "Native UserForm, terrain and cockpit presented"
         If j = 1 Then
+            Check "Review renderer playback starts", BeginReplay(), "Recorded approach available"
+            SeekReplay ReplayDuration() * 0.7
+            For cameraIndex = 0 To 4
+                CameraMode = cameraIndex: Call RenderFrame: Present
+            Next
+            CameraMode = 2: Call RenderFrame: SaveFrame ThisWorkbook.Path & "\Tests\replay-v04.bmp"
+            Check "Review replay cameras", ReplayActive, "Five camera views rendered from recorded aircraft states"
+            EndReplay
             CheckInstrumentBindings
             Check "J Depth occlusion", CheckDepthRaster(), "Far polygon cannot overwrite near polygon; nearer polygon can"
             Paused = False: Demo = False
