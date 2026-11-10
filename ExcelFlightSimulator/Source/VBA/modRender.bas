@@ -15,6 +15,7 @@ Private camE As Double, camN As Double, camAlt As Double, camYaw As Double, camP
 Private sh As Double, ch As Double, cb As Double, sb As Double
 Public TerrainMS As Double, PanelMS As Double, FPS As Double
 Public Sub InitRenderer(ByVal hwnd As LongPtr)
+    If hwnd = 0 Then Err.Raise 5, , "Flight window not found"
     SimHwnd = hwnd: windowDC = GetDC(hwnd)
     If windowDC = 0 Then Err.Raise 5, , "Cannot acquire simulator DC"
     Canvas = CreateCompatibleDC(windowDC): sceneDC = CreateCompatibleDC(windowDC)
@@ -322,13 +323,21 @@ Private Sub Airport()
 End Sub
 Public Sub Present()
     Dim r As RECT, w As Long, h As Long, viewScale As Double
+    Dim x As Long, y As Long, margin As Long
     If SimHwnd = 0 Then Exit Sub
     GetClientRect SimHwnd, r
     viewScale = r.Right / 1000
     If r.Bottom / 700 < viewScale Then viewScale = r.Bottom / 700
     w = CLng(1000 * viewScale): h = CLng(700 * viewScale)
-    Box windowDC, 0, 0, r.Right, r.Bottom, RGB(7, 13, 17)
-    StretchBlt windowDC, (r.Right - w) \ 2, (r.Bottom - h) \ 2, w, h, Canvas, 0, 0, 1000, 700, SRCCOPY
+    If w <= 0 Or h <= 0 Then Exit Sub
+    x = (r.Right - w) \ 2: y = (r.Bottom - h) \ 2
+    ' Keep the previous frame visible until its complete replacement is copied.
+    margin = RGB(7, 13, 17)
+    If x > 0 Then Box windowDC, 0, y, x, h, margin
+    If x + w < r.Right Then Box windowDC, x + w, y, r.Right - x - w, h, margin
+    If y > 0 Then Box windowDC, 0, 0, r.Right, y, margin
+    If y + h < r.Bottom Then Box windowDC, 0, y + h, r.Right, r.Bottom - y - h, margin
+    StretchBlt windowDC, x, y, w, h, Canvas, 0, 0, 1000, 700, SRCCOPY
 End Sub
 Private Sub DrawHUD()
     Box Canvas, 0, 0, 1000, 34, RGB(13, 26, 32)

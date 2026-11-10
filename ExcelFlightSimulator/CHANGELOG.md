@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1 — 2026-11-10
+
+- Fixed a visible flash during flight and replay. The previous cockpit frame now stays on screen until the renderer copies its replacement. Only the margins outside the picture are filled.
+
 ## 0.3 — 2026-11-08
 
 - Added inverse-depth testing shared by terrain, airport buildings, runway markings and the original low-poly chase aircraft. Added a generalized apron/taxiway, seven collidable hangars, and runway 15/33 designators.

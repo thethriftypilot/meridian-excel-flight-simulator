@@ -10,6 +10,8 @@ All simulation and rendering decisions execute inside Excel. No external graphic
 
 ## Fly
 
+**Seeing a dark flash when you start flying?** [Download the v0.4.1 fix](https://github.com/thethriftypilot/meridian-excel-flight-simulator/releases/tag/v0.4.1) and extract it into a new folder to keep any debriefs and personal bests in your existing workbook.
+
 **New in v0.4:** scored runway 15 and crosswind landing challenges, Excel debriefs with flight-path/altitude charts, local personal bests, and five-camera replay with pause, seek and playback speed. [Challenge and replay guide](ExcelFlightSimulator/Documentation/CHALLENGES.md).
 
 Visit [Meridian on The Thrifty Pilot](https://www.thethriftypilot.com/meridian) for screenshots, requirements and setup instructions, or browse the [Pilot Tools directory](https://www.thethriftypilot.com/aviation-software).
