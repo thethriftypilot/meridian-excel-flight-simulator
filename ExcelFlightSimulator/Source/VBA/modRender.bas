@@ -4,6 +4,8 @@ Public SimHwnd As LongPtr, Canvas As LongPtr
 Private windowDC As LongPtr, sceneDC As LongPtr, canvasBitmap As LongPtr, sceneBitmap As LongPtr
 Private oldCanvas As LongPtr, oldScene As LongPtr
 Private panelDC As LongPtr, panelBitmap As LongPtr, oldPanel As LongPtr
+Private skyTexture(0 To 786431) As Long, loadedSky As String
+Private panelSkin(0 To 309999) As Long
 Private buildingPanel As Boolean
 Private instrumentDC As LongPtr, instrumentBitmap As LongPtr, oldInstrument As LongPtr
 Private fonts(0 To 3) As LongPtr
@@ -146,16 +148,8 @@ Private Sub RenderTerrain()
     If Weather = 4 Then skyR = 18: skyG = 28: skyB = 46
     If Weather = 3 Or Weather = 5 Or Weather = 6 Then skyR = 166: skyG = 178: skyB = 181
     horizon = 240 + camPitch * 300
-    For y = 0 To 479
-        u = Clamp((horizon - y) / 270, 0, 1)
-        r = skyR * (1 - u * 0.58): g = skyG * (1 - u * 0.35): b = skyB * (1 - u * 0.12)
-        rowColor = r * 65536 + g * 256 + b
-        index = y * 480
-        For x = 0 To 479: pixels(index + x) = rowColor: inverseDepth(index + x) = 0: Next
-    Next
-    'World-anchored clouds, projected into the same yaw/pitch camera.
-    If Weather = 0 Or Weather = 1 Or Weather = 2 Then DrawSun horizon
-    If Weather <> 3 And Weather <> 4 And Weather <> 5 And Weather <> 6 Then Clouds horizon
+    DrawSky horizon
+    Erase inverseDepth
     For x = 0 To 479: ceiling(x) = 480: Next
     stride = 1: If Quality = 0 Then stride = 2
     z = 8
@@ -204,55 +198,47 @@ Private Sub RenderTerrain()
         z = z + dz
     Loop
 End Sub
-Private Sub Clouds(ByVal horizon As Double)
-    Dim i As Long, x As Long, y As Long, cx As Double, cy As Double, rx As Double, ry As Double
-    Dim angle As Double, d As Double, alpha As Double, base As Long, rr As Long, gg As Long, bb As Long
-    Dim u As Double, v As Double, density As Double, lobe As Double, tint As Double
-    Static mask(0 To 2047) As Single, maskReady As Boolean
-    Dim mx As Long, my As Long
-    If Not maskReady Then
-        For my = 0 To 31
-            v = -1 + my * 1.5 / 31
-            For mx = 0 To 63
-                u = -1 + mx * 2 / 63
-                density = 1 - u * u - (v / 0.43) ^ 2
-                lobe = 1 - ((u + 0.42) / 0.43) ^ 2 - ((v + 0.27) / 0.53) ^ 2
-                If lobe > density Then density = lobe
-                lobe = 1 - ((u - 0.05) / 0.42) ^ 2 - ((v + 0.38) / 0.62) ^ 2
-                If lobe > density Then density = lobe
-                lobe = 1 - ((u - 0.48) / 0.38) ^ 2 - ((v + 0.16) / 0.49) ^ 2
-                If lobe > density Then density = lobe
-                mask(mx + my * 64) = Clamp(density * 5, 0, 0.94)
-            Next
-        Next
-        maskReady = True
+Private Sub ReadGraphic(ByVal asset As String, ByRef data() As Long)
+    Dim channel As Integer, path As String
+    path = ThisWorkbook.Path & "\Assets\Graphics\" & asset & ".rgb"
+    If FileLen(path) <> 4& * (UBound(data) + 1) Then Err.Raise 5, , "Invalid graphics asset: " & asset
+    channel = FreeFile
+    Open path For Binary Access Read As #channel
+    Get #channel, , data
+    Close #channel
+End Sub
+
+Private Sub DrawSky(ByVal horizon As Double)
+    Dim name As String, x As Long, y As Long, base As Long, column(0 To 479) As Long
+    Dim row As Long, heading As Long, start As Long
+    Static offsets(0 To 479) As Long, mapped As Boolean
+    name = Choose(Weather + 1, "day", "dusk", "day", "storm", "night", "storm", "storm")
+    If name <> loadedSky Then
+        ReadGraphic name, skyTexture
+        loadedSky = name
     End If
-    For i = 0 To 15
-        angle = Wrap(i * 2.399 + 0.2 - camYaw + PI) - PI: d = 3800 + (i Mod 5) * 900
-        If Abs(angle) < 1.15 Then
-            cx = 240 + Tan(angle) * 300: cy = horizon - (1300 - camAlt) * 300 / d
-            rx = 28 + (i Mod 4) * 12: ry = 13 + i Mod 5
-            For y = CLng(Clamp(cy - ry, 0, 479)) To CLng(Clamp(cy + ry * 0.5, 0, 479))
-                v = (y - cy) / ry
-                my = Clamp((v + 1) * 31 / 1.5, 0, 31)
-                tint = 1 - Clamp((v + 0.2) * 0.18, 0, 0.14)
-                For x = CLng(Clamp(cx - rx, 0, 479)) To CLng(Clamp(cx + rx, 0, 479))
-                    mx = Clamp(((x - cx) / rx + 1) * 31.5, 0, 63)
-                    alpha = mask(mx + my * 64)
-                    If alpha > 0 Then
-                        base = pixels(x + y * 480)
-                        rr = ((base \ 65536) And 255) * (1 - alpha) + 238 * tint * alpha
-                        gg = ((base \ 256) And 255) * (1 - alpha) + IIf(Weather = 1, 193, 239) * tint * alpha
-                        bb = (base And 255) * (1 - alpha) + IIf(Weather = 1, 161, 231) * tint * alpha
-                        pixels(x + y * 480) = rr * 65536 + gg * 256 + bb
-                    End If
-                Next
-            Next
-        End If
+    If Not mapped Then
+        For x = 0 To 479
+            offsets(x) = CLng(Atn((x - 240) / 300) * 2048 / (2 * PI))
+        Next
+        mapped = True
+    End If
+    heading = CLng(camYaw * 2048 / (2 * PI))
+    For x = 0 To 479
+        column(x) = (heading + offsets(x)) And 2047
+    Next
+    For y = 0 To 479
+        row = CLng((horizon - y) * 232 / 300)
+        If row < 0 Then row = 0
+        If row > 383 Then row = 383
+        base = row * 2048: start = y * 480
+        For x = 0 To 479
+            pixels(start + x) = skyTexture(base + column(x))
+        Next
     Next
 End Sub
 'Near-plane clip a runway-aligned rectangle before projecting into the unrolled scene.
-Private Sub GroundQuad(ByVal along As Double, ByVal lateral As Double, ByVal length As Double, ByVal width As Double, ByVal color As Long)
+Private Sub GroundQuad(ByVal along As Double, ByVal lateral As Double, ByVal length As Double, ByVal width As Double, ByVal color As Long, Optional ByVal pavement As Boolean = False)
     Dim ax(0 To 7) As Double, az(0 To 7) As Double, ah(0 To 7) As Double
     Dim bx(0 To 7) As Double, bz(0 To 7) As Double, bh(0 To 7) As Double
     Dim p(0 To 7) As POINTAPI, i As Long, j As Long, n As Long, u As Double
@@ -283,7 +269,7 @@ Private Sub GroundQuad(ByVal along As Double, ByVal lateral As Double, ByVal len
         p(i).y = Clamp(240 + camPitch * 300 - bh(i) * 300 / bz(i), -16000, 16000)
     Next
     If Weather = 4 And Abs(lateral) > 18 Then color = RGB((color And 255) * 0.15, ((color \ 256) And 255) * 0.15, ((color \ 65536) And 255) * 0.15)
-    RasterPolygon p, bz, n, color, 1.025
+    RasterPolygon p, bz, n, color, 1.025, pavement
 End Sub
 Private Sub Airport()
     Dim s As Double, c As Long, lateral As Double
@@ -303,7 +289,7 @@ Private Sub Airport()
         GroundQuad s, -34, 13, 62, RGB(82, 86, 83)
     Next
     For s = -808.265 To 808.265 Step 59.87
-        GroundQuad s, 0, 59.87, 30.48, c
+        GroundQuad s, 0, 59.87, 30.48, c, True
         GroundQuad s, -14.5, 59.87, 0.5, RGB(220, 222, 204)
         GroundQuad s, 14.5, 59.87, 0.5, RGB(220, 222, 204)
     Next
@@ -357,10 +343,10 @@ End Sub
 Private Sub Gauge(ByVal x As Long, ByVal y As Long, ByVal title As String, ByVal value As Double, ByVal maxValue As Double, ByVal units As String)
     Dim i As Long, angle As Double, nx As Long, ny As Long
     If buildingPanel Then
-    Disk Canvas, x, y, 69, RGB(12, 18, 21)
-    Disk Canvas, x, y, 67, RGB(82, 94, 97)
-    Disk Canvas, x, y, 65, RGB(35, 44, 48)
-    Disk Canvas, x, y, 62, RGB(5, 12, 17)
+    For i = 0 To 50
+        angle = (-140 + 5.6 * i) * PI / 180
+        DrawLine Canvas, x + Sin(angle) * 57, y - Cos(angle) * 57, x + Sin(angle) * 60, y - Cos(angle) * 60, RGB(138, 151, 151)
+    Next
     For i = 0 To 10
         angle = (-140 + 28 * i) * PI / 180
         DrawLine Canvas, x + Sin(angle) * 53, y - Cos(angle) * 53, x + Sin(angle) * 60, y - Cos(angle) * 60, RGB(188, 203, 204), 2
@@ -378,7 +364,7 @@ Private Sub Gauge(ByVal x As Long, ByVal y As Long, ByVal title As String, ByVal
 End Sub
 Private Sub HorizonGauge(ByVal x As Long, ByVal y As Long)
     Dim row As Long, col As Long, yy As Long, xx As Long, span As Long, p(0 To 3) As POINTAPI
-    Disk Canvas, x, y, 69, RGB(50, 57, 61)
+
     'Short scanlines clipped to circular instrument, horizon responds to pitch and bank.
     Dim h As Double, ycut As Double, leftGround As Long, rightGround As Long
     Static attitude(0 To 15128) As Long
@@ -386,10 +372,8 @@ Private Sub HorizonGauge(ByVal x As Long, ByVal y As Long)
     bankSin = Sin(Plane.bank): bankCos = Cos(Plane.bank): pitchOffset = Plane.pitch * 130
     For row = -61 To 61
         For col = -61 To 61
-            If row * row + col * col > 4761 Then
-                attitude((row + 61) * 123 + col + 61) = &H1C2226
-            ElseIf row * row + col * col > 3721 Then
-                attitude((row + 61) * 123 + col + 61) = &H32393D
+            If row * row + col * col > 3721 Then
+                attitude((row + 61) * 123 + col + 61) = panelSkin((y + row - 390) * 1000 + x + col)
             ElseIf row * bankCos + col * bankSin > pitchOffset Then
                 attitude((row + 61) * 123 + col + 61) = &H865732
             Else
@@ -399,6 +383,16 @@ Private Sub HorizonGauge(ByVal x As Long, ByVal y As Long)
     Next
     info.biSize = 40: info.biWidth = 123: info.biHeight = -123: info.biPlanes = 1: info.biBitCount = 32
     StretchDIBits Canvas, x - 61, y - 61, 123, 123, 0, 0, 123, 123, attitude(0), info, 0, SRCCOPY
+    ' Graduations move with the artificial horizon behind the fixed aircraft symbol.
+    Dim mark As Long, offset As Double, spanPixels As Long
+    For mark = -3 To 3
+        offset = pitchOffset - mark * (PI / 36) * 130
+        If Abs(offset) < 46 Then
+            spanPixels = 10
+            If mark Mod 2 = 0 Then spanPixels = 18
+            DrawLine Canvas, x + offset * bankSin - spanPixels * bankCos, y + offset * bankCos + spanPixels * bankSin, x + offset * bankSin + spanPixels * bankCos, y + offset * bankCos - spanPixels * bankSin, RGB(230, 231, 218)
+        End If
+    Next
     DrawLine Canvas, x - 40, y, x - 10, y, RGB(255, 209, 83), 3
     DrawLine Canvas, x + 10, y, x + 40, y, RGB(255, 209, 83), 3
     DrawLine Canvas, x - 10, y, x, y + 7, RGB(255, 209, 83), 3
@@ -413,18 +407,13 @@ Private Sub DrawPanel()
         If panelDC = 0 Or panelBitmap = 0 Then Err.Raise 7, , "Cockpit allocation failed"
         oldPanel = SelectObject(panelDC, panelBitmap)
         saved = Canvas: Canvas = panelDC: buildingPanel = True
-        Box Canvas, 0, 390, 1000, 310, RGB(28, 34, 38)
-        For i = 400 To 674 Step 4
-            DrawLine Canvas, 0, i, 1000, i, RGB(31, 38, 42)
-        Next
-        Box Canvas, 0, 390, 1000, 9, RGB(8, 13, 17)
+        Dim info As BITMAPINFOHEADER
+        ReadGraphic "panel", panelSkin
+        info.biSize = 40: info.biWidth = 1000: info.biHeight = -310: info.biPlanes = 1: info.biBitCount = 32
+        StretchDIBits Canvas, 0, 390, 1000, 310, 0, 0, 1000, 310, panelSkin(0), info, 0, SRCCOPY
         Gauge 85, 470, "AIRSPEED", 0, 160, "KT"
         Gauge 395, 470, "ALTITUDE", 0, 10000, "FT"
         Gauge 395, 610, "CLIMB FPM", 0, 4000, ""
-        Disk Canvas, 240, 610, 69, RGB(50, 57, 61)
-        Disk Canvas, 240, 610, 64, RGB(5, 12, 17)
-        Disk Canvas, 85, 610, 69, RGB(50, 57, 61)
-        Disk Canvas, 85, 610, 64, RGB(5, 12, 17)
         DrawText Canvas, 38, 568, "TURN / SLIP", 3
         DrawText Canvas, 38, 640, "L   2 MIN   R", 3
         Gauge 550, 470, "ENGINE", 0, 3000, "RPM"
@@ -543,10 +532,17 @@ Public Sub WorldFace(ByRef east() As Double, ByRef north() As Double, ByRef heig
     Next
     RasterPolygon p, bz, n, color, 1
 End Sub
-Private Sub RasterPolygon(ByRef p() As POINTAPI, ByRef z() As Double, ByVal count As Long, ByVal color As Long, ByVal bias As Double)
+Private Sub RasterPolygon(ByRef p() As POINTAPI, ByRef z() As Double, ByVal count As Long, ByVal color As Long, ByVal bias As Double, Optional ByVal pavement As Boolean = False)
     Dim low As Long, high As Long, i As Long, j As Long, x As Long, y As Long, first As Long, last As Long, index As Long
     Dim leftX As Double, rightX As Double, leftQ As Double, rightQ As Double, u As Double, hitX As Double, hitQ As Double
     Dim q As Double, dq As Double, rowY As Double, dibColor As Long
+    Dim forwardAlong As Double, rightAlong As Double, alongOrigin As Double, sideOrigin As Double
+    Dim along As Double, side As Double, ray As Double, variation As Long, tileX As Long, tileY As Long
+    If pavement Then
+        forwardAlong = Cos(camYaw - RunwayHeading): rightAlong = Sin(RunwayHeading - camYaw)
+        alongOrigin = AlongRunway(camE, camN)
+        sideOrigin = (camE - RunwayCenterEast) * Cos(RunwayHeading) - (camN - RunwayCenterNorth) * Sin(RunwayHeading)
+    End If
     low = 480: high = -1
     For i = 0 To count - 1
         If p(i).y < low Then low = p(i).y
@@ -575,6 +571,17 @@ Private Sub RasterPolygon(ByRef p() As POINTAPI, ByRef z() As Double, ByVal coun
             For x = first To last
                 If q * bias >= inverseDepth(index) Then
                     pixels(index) = dibColor: inverseDepth(index) = q
+                    If pavement And q > 0.004 Then
+                        ray = (x + 0.5 - 240) / 300
+                        along = alongOrigin + (forwardAlong + ray * rightAlong) / q
+                        side = sideOrigin + (ray * forwardAlong - rightAlong) / q
+                        ' Stable world coordinates keep aggregate and rubber streaks attached to the asphalt.
+                        tileX = Int(side * 3): tileY = Int(along * 3)
+                        variation = ((tileX * 31 Xor tileY * 71 Xor (tileY \ 7)) And 7) - 3
+                        If Abs(side) > 1.1 And Abs(side) < 3.8 Then variation = variation - ((tileX * 3 And 7) + 2)
+                        If Weather = 4 Then variation = variation \ 3
+                        pixels(index) = dibColor + variation * 65793
+                    End If
                     SceneryPixels = SceneryPixels + 1
                 End If
                 index = index + 1: q = q + dq
@@ -609,27 +616,7 @@ Private Sub DrawRain()
     Next
 End Sub
 
-Private Sub DrawSun(ByVal horizon As Double)
-    Dim angle As Double, altitude As Double, cx As Double, cy As Double, x As Long, y As Long
-    Dim d As Double, alpha As Double, old As Long, r As Long, g As Long, b As Long
-    angle = Wrap(5.4977871438 - camYaw + PI) - PI: altitude = 0.7853981634
-    If Weather = 1 Then angle = Wrap(4.7123889804 - camYaw + PI) - PI: altitude = 0.14
-    If Abs(angle) > 0.95 Then Exit Sub
-    cx = 240 + Tan(angle) * 300: cy = horizon - Tan(altitude) * 300
-    For y = CLng(Clamp(cy - 16, 0, 479)) To CLng(Clamp(cy + 16, 0, 479))
-        For x = CLng(Clamp(cx - 16, 0, 479)) To CLng(Clamp(cx + 16, 0, 479))
-            d = Sqr((x - cx) ^ 2 + (y - cy) ^ 2)
-            If d < 16 Then
-                alpha = Clamp((16 - d) / 12, 0, 1)
-                old = pixels(x + y * 480)
-                r = ((old \ 65536) And 255) * (1 - alpha) + 255 * alpha
-                g = ((old \ 256) And 255) * (1 - alpha) + 220 * alpha
-                b = (old And 255) * (1 - alpha) + 146 * alpha
-                pixels(x + y * 480) = r * 65536 + g * 256 + b
-            End If
-        Next
-    Next
-End Sub
+
 
 Private Sub RunwayNumber(ByVal along As Double, ByVal direction As Double, ByVal first As String, ByVal second As String)
     Dim digit As Long, row As Long, col As Long, pattern As String, ch As String

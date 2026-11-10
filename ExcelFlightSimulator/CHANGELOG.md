@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5 — 2026-11-10
+
+- Replaced the repeating cloud shapes with four wraparound skies rendered from a procedural cloud volume. Daylight, sunset, overcast and night lighting cover all seven weather presets. The sky follows camera heading, pitch and bank.
+- Added a textured cockpit panel, recessed gauges, finer tick marks and a moving pitch ladder on the attitude indicator.
+- Added asphalt grain and rubber streaks anchored to the runway so surface details move past the cockpit on takeoff and landing.
+
 ## 0.4.1 — 2026-11-10
 
 - Fixed a visible flash during flight and replay. The previous cockpit frame now stays on screen until the renderer copies its replacement. Only the margins outside the picture are filled.

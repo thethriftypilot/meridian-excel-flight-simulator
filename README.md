@@ -6,11 +6,11 @@ Native VBA flight physics, a software terrain framebuffer, authentic USGS elevat
 
 All simulation and rendering decisions execute inside Excel. No external graphics engine, browser, Python runtime, or compiled custom DLL is needed to fly.
 
-![Actual native VBA cockpit](ExcelFlightSimulator/Tests/banked-cockpit.png)
+![Meridian v0.5 cockpit banking under the new cloud layer](ExcelFlightSimulator/Tests/banked-cockpit-v05.png)
 
 ## Fly
 
-**Seeing a dark flash when you start flying?** [Download the v0.4.1 fix](https://github.com/thethriftypilot/meridian-excel-flight-simulator/releases/tag/v0.4.1) and extract it into a new folder to keep any debriefs and personal bests in your existing workbook.
+**[Download Meridian v0.5](https://github.com/thethriftypilot/meridian-excel-flight-simulator/releases/tag/v0.5.0)** for panoramic weather skies, textured runway pavement and a rebuilt instrument panel. Extract the ZIP into a new folder to keep the debriefs and personal bests in your existing workbook.
 
 **New in v0.4:** scored runway 15 and crosswind landing challenges, Excel debriefs with flight-path/altitude charts, local personal bests, and five-camera replay with pause, seek and playback speed. [Challenge and replay guide](ExcelFlightSimulator/Documentation/CHALLENGES.md).
 
