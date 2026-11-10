@@ -192,6 +192,44 @@ Public Function RunSelfTests() As String
             Call RenderFrame: SaveFrame ThisWorkbook.Path & "\Tests\airport.bmp"
             ResetFlight 1: CameraMode = 2: Call RenderFrame: SaveFrame ThisWorkbook.Path & "\Tests\aircraft.bmp"
             CameraMode = 0: SetWeather 6: Call RenderFrame: SaveFrame ThisWorkbook.Path & "\Tests\rain.bmp"
+            Quality = 2: ResetFlight 2: SetWeather 0: CameraMode = 0
+            Call RenderFrame
+            SaveFrame ThisWorkbook.Path & "\Tests\approach-v06.bmp"
+            Check "Detailed landscape", Quality = 2 And LandscapeError = "", "Full-resolution OpenGL frame" & LandscapeError
+            ResetFlight 0: Call RenderFrame: SaveFrame ThisWorkbook.Path & "\Tests\runway-v06.bmp"
+            ResetFlight 1: SetWeather 1: CameraMode = 2: Call RenderFrame
+            SaveFrame ThisWorkbook.Path & "\Tests\sunset-v06.bmp"
+            t = Clock()
+            For i = 1 To 120
+                Call DemoControls: StepFlight 1# / 30: CameraMode = 2: Call RenderFrame: Present
+            Next
+            Check "Detailed benchmark", LandscapeError = "", Format(120 / (Clock() - t), "0.00") & " FPS, 120 full-resolution chase frames" & LandscapeError
+            For weatherIndex = 0 To 6
+                SetWeather weatherIndex
+                For cameraIndex = 0 To 4
+                    CameraMode = cameraIndex: Call RenderFrame: Present
+                Next
+            Next
+            Check "Detailed camera and weather matrix", Quality = 2 And LandscapeError = "", "35 combinations without software fallback"
+            ResetFlight 6: SetWeather 0: CameraMode = 2
+            Plane.east = RunwayEast(-260, -150): Plane.north = RunwayNorth(-260, -150)
+            Plane.altitude = TerrainGround(Plane.east, Plane.north) + 30
+            Plane.heading = RunwayHeading: Plane.bank = -0.15: Plane.pitch = 0
+            Call RenderFrame: SaveFrame ThisWorkbook.Path & "\Tests\flyby-v06.bmp"
+            ' Identical aircraft states and camera for the same-path comparison.
+            Dim level As Long
+            For level = 0 To 3
+                Quality = level: ResetFlight 2: SetWeather 0: CameraMode = 0
+                Call RenderFrame
+                t = Clock()
+                For i = 1 To 90
+                    StepFlight 1# / 60: Call RenderFrame: Present
+                Next
+                Check "Approach quality " & level, Quality = level, Format(90 / (Clock() - t), "0.00") & " uncapped FPS, matched 90-frame approach"
+            Next
+            ResetFlight 1: SetWeather 1: CameraMode = 2
+            Call RenderFrame: SaveFrame ThisWorkbook.Path & "\Tests\supersampled-v06.bmp"
+            Quality = 1
             SetWeather 0: Call StartAudio: t = Clock()
             Do While Clock() - t < 2
                 Plane.throttle = (Clock() - t) / 2: Plane.rpm = 700 + Plane.throttle * 2000

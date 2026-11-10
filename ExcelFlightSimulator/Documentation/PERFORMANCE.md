@@ -1,3 +1,32 @@
+# v0.6 graphics measurements
+
+Measured in 64-bit desktop Excel on the development PC, with an NVIDIA GeForce GTX 1080 and its Windows OpenGL driver. Other applications were open.
+
+| Matched 90-frame final approach | Uncapped FPS |
+|---|---:|
+| Performance | 34.35 |
+| Balanced | 20.40 |
+| Detailed 3D | 46.85 |
+| Detailed 3D / 2x | 26.97 |
+
+Each comparison resets the same aircraft state, weather and cockpit camera, warms the renderer, then advances the same 90 physics steps. Separate two-minute runs include live audio, flight recording, weather and camera changes and the production frame budget.
+
+| Continuous flight | Detailed 3D | Detailed 3D / 2x |
+|---|---:|---:|
+| Frames in 120 seconds | 5,658 | 3,576 |
+| Average FPS | 47.14 | 29.80 |
+| Render/audio/presentation P95 below | 23 ms | 39 ms |
+| Worst measured update | 48.2 ms | 51.9 ms |
+| Initial working set | 375.6 MB | 388.7 MB |
+| Peak working set | 383.2 MB | 393.6 MB |
+| Initial / peak GDI objects | 367 / 368 | 369 / 371 |
+| Recorded flight samples | 1,200 | 1,200 |
+| Audio buffers submitted | 1,207 | 1,207 |
+
+The timings exclude startup asset loading. Frame-budget sleeps and desktop scheduling affect continuous-flight averages. These measurements describe this hardware and driver. Hardware-independent performance is untested. The final workbook passed 85 native checks and the missing-geometry fallback test. Static screenshot HUD values can retain the preceding test's FPS reading. Use these measurements and the raw CSV logs for performance.
+
+Evidence is retained in Tests/results.txt, graphics-soak.csv, graphics-2x-soak.csv and their result files.
+
 # v0.4 measurements
 
 The final native run measured 15.44 FPS in Balanced, 18.98 FPS in Performance and 16.72 FPS with the moving map. A separate two-minute continuous flight with recording enabled averaged 21.33 FPS and captured 1,200 samples. See Tests/results.txt and Tests/soak-result.txt. The longer measurements below are from v0.3.

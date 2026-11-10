@@ -23,7 +23,7 @@ End Sub
 Public Sub BeginFlight(ByVal automatic As Boolean)
     Dim previous As Double, now As Double, elapsed As Double, accumulator As Double, t As Double
     Dim frameStart As Double, smooth As Double, counter As Long, reportStart As Double
-    Dim errText As String, qualityTimer As Double, flightStart As Double, logFile As Integer, logOpened As Boolean
+    Dim targetMS As Double, errText As String, qualityTimer As Double, flightStart As Double, logFile As Integer, logOpened As Boolean
     On Error GoTo failed
     If Running Then Exit Sub
     LoadWorld
@@ -79,7 +79,8 @@ Public Sub BeginFlight(ByVal automatic As Boolean)
         End If
         DoEvents
         FrameMS = (Clock() - frameStart) * 1000
-        If FrameMS < 33 Then Sleep CLng(33 - FrameMS)
+        targetMS = 33: If Quality >= 2 Then targetMS = 1000# / 60
+        If FrameMS < targetMS Then Sleep CLng(targetMS - FrameMS)
         If TestFlightSeconds > 0 And now - flightStart > TestFlightSeconds Then
             SaveFrame ThisWorkbook.Path & "\Tests\live-flight.bmp"
             Running = False

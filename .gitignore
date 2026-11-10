@@ -11,3 +11,9 @@ ExcelFlightSimulator/Tests/last-flight.csv
 __pycache__/
 *.pyc
 .publish-state.json
+
+# Generated scenery ships in the release ZIP.
+ExcelFlightSimulator/Assets/Landscape/*.f32
+ExcelFlightSimulator/Assets/Landscape/*.rgba
+ExcelFlightSimulator/Assets/Landscape/*.i32
+ExcelFlightSimulator/Assets/Terrain/airport-detail-*.jpg.json

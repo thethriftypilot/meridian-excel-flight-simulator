@@ -36,6 +36,28 @@ Private Sub Hangar(ByVal along As Double, ByVal lateral As Double, ByVal length 
         color = RGB((110 + j * 13) * light, (119 + j * 12) * light, (123 + j * 11) * light)
         WorldFace fe, fn, fh, color
     Next
+    If LandscapeDrawing Then
+        Dim sign As Long, side As Long, peak As Double
+        peak = height + width * 0.12
+        For sign = -1 To 1 Step 2
+            For i = 0 To 3
+                s = along - length / 2 - 0.6
+                If i = 1 Or i = 2 Then s = along + length / 2 + 0.6
+                t = lateral: fh(i) = floor + peak
+                If i < 2 Then t = lateral + sign * (width / 2 + 0.7): fh(i) = floor + height
+                fe(i) = RunwayEast(s, t): fn(i) = RunwayNorth(s, t)
+            Next
+            color = RGB((168 + 17 * sign) * light, (164 + 17 * sign) * light, (147 + 17 * sign) * light)
+            WorldFace fe, fn, fh, color
+            s = along + sign * length / 2
+            For i = 0 To 3
+                t = lateral: fh(i) = floor + peak
+                If i < 2 Then t = lateral + (2 * i - 1) * width / 2: fh(i) = floor + height
+                fe(i) = RunwayEast(s, t): fn(i) = RunwayNorth(s, t)
+            Next
+            WorldFace fe, fn, fh, color
+        Next
+    End If
     'Inset dark hangar door on the runway-facing wall.
     For i = 0 To 3
         s = along - length * 0.38

@@ -2,15 +2,15 @@
 
 **A real flight simulator inside Microsoft Excel.**
 
-Native VBA flight physics, a software terrain framebuffer, authentic USGS elevation and aerial imagery around Richmond Executive Airport (KFCI), a Piper Warrior-inspired aircraft, cockpit instruments, depth-tested airport buildings and a 3D aircraft, seven weather presets, and synthesized Windows audio.
+Native VBA flight physics, a full-resolution Windows OpenGL landscape and two software rendering modes, authentic USGS elevation and aerial imagery around Richmond Executive Airport (KFCI), a Piper Warrior-inspired aircraft, cockpit instruments, depth-tested airport buildings and a 3D aircraft, seven weather presets, and synthesized Windows audio.
 
 All simulation and rendering decisions execute inside Excel. No external graphics engine, browser, Python runtime, or compiled custom DLL is needed to fly.
 
-![Meridian v0.5 cockpit banking under the new cloud layer](ExcelFlightSimulator/Tests/banked-cockpit-v05.png)
+![Actual Excel chase view over KFCI at sunset](ExcelFlightSimulator/Tests/sunset-v06.png)
 
 ## Fly
 
-**[Download Meridian v0.5](https://github.com/thethriftypilot/meridian-excel-flight-simulator/releases/tag/v0.5.0)** for panoramic weather skies, textured runway pavement and a rebuilt instrument panel. Extract the ZIP into a new folder to keep the debriefs and personal bests in your existing workbook.
+**[Download Meridian v0.6](https://github.com/thethriftypilot/meridian-excel-flight-simulator/releases/tag/v0.6.0)** and select **Detailed 3D** for the full-resolution landscape, textured woodland, detailed aircraft and higher-resolution airport imagery. Choose **Detailed 3D / 2x** to render at 2000 × 1400 for smoother edges. Extract the ZIP into a new folder to keep the debriefs and personal bests in your existing workbook.
 
 **New in v0.4:** scored runway 15 and crosswind landing challenges, Excel debriefs with flight-path/altitude charts, local personal bests, and five-camera replay with pause, seek and playback speed. [Challenge and replay guide](ExcelFlightSimulator/Documentation/CHALLENGES.md).
 

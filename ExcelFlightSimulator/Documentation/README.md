@@ -10,7 +10,7 @@ An experimental, native VBA flight simulator for 64-bit Windows desktop Excel. T
 
 3. Click **OPEN FLIGHT SIMULATOR**, then **START FLIGHT** or **WATCH DEMONSTRATION**.
 
-4. For the easiest introduction, use **Richmond scenic flight**, **Clear / calm**, and **Performance**. Demonstration mode flies the same physics model with an automatic controller.
+4. For the easiest introduction, use **Richmond scenic flight**, **Clear / calm**, and **Detailed 3D**. Demonstration mode flies the same physics model with an automatic controller.
 
 5. Press **Esc** to return to the menu. Close the menu to return to Excel.
 
@@ -38,7 +38,7 @@ The airport includes a generalized apron, taxiway and collidable hangars; the ch
 
 - Macros unavailable: use desktop Excel and your normal per-file authorization. Organizational policies may prevent execution.
 
-- Slow flight: use Performance. Balanced automatically falls back if measured FPS drops below 18.
+- Graphics quality: Detailed 3D uses the Windows OpenGL driver and targets 60 FPS. It returns to Performance if the driver cannot initialize. For slow flight, select Performance. Balanced automatically falls back if measured FPS drops below 18.
 
 - Controls inactive: click the simulator window. Physics and input suspend when the simulator loses foreground focus.
 

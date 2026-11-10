@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6 — 2026-11-10
+
+- Added Detailed 3D as the default graphics preset in the launch menu. It renders 1000 × 700 frames from VBA using the Windows OpenGL driver. Detailed 3D / 2x supersamples at 2000 × 1400.
+- Added finer KFCI aerial imagery, 3D woodland, textured pavement, a pilot-eye cowling and windshield, plus a rebuilt chase aircraft with cabin glazing and fixed landing gear.
+- Added a detailed-mode stress flight with recorder, audio, camera and weather changes, frame timings and memory sampling.
+
 ## 0.5 â€” 2026-11-10
 
 - Replaced the repeating cloud shapes with four wraparound skies rendered from a procedural cloud volume. Daylight, sunset, overcast and night lighting cover all seven weather presets. The sky follows camera heading, pitch and bank.

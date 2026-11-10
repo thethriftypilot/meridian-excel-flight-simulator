@@ -1,0 +1,11 @@
+{
+  "airport_imagery": [
+    "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer/exportImage?f=json&bbox=-8633247.748645881%2C4495920.128158439%2C-8630024.970496356%2C4499142.906307964&bboxSR=3857&imageSR=3857&size=2048%2C2048&interpolation=RSP_BilinearInterpolation&format=jpg&bandIds=0%2C1%2C2",
+    "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer/exportImage?f=json&bbox=-8630024.970496356%2C4495920.128158439%2C-8626802.192346832%2C4499142.906307964&bboxSR=3857&imageSR=3857&size=2048%2C2048&interpolation=RSP_BilinearInterpolation&format=jpg&bandIds=0%2C1%2C2",
+    "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer/exportImage?f=json&bbox=-8633247.748645881%2C4492697.350008914%2C-8630024.970496356%2C4495920.128158439&bboxSR=3857&imageSR=3857&size=2048%2C2048&interpolation=RSP_BilinearInterpolation&format=jpg&bandIds=0%2C1%2C2",
+    "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer/exportImage?f=json&bbox=-8630024.970496356%2C4492697.350008914%2C-8626802.192346832%2C4495920.128158439&bboxSR=3857&imageSR=3857&size=2048%2C2048&interpolation=RSP_BilinearInterpolation&format=jpg&bandIds=0%2C1%2C2"
+  ],
+  "metres_per_pixel": 1.25,
+  "trees": 357605,
+  "placement": "synthetic scenery inferred from imagery colour"
+}

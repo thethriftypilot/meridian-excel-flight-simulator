@@ -33,6 +33,7 @@ Public Sub InitRenderer(ByVal hwnd As LongPtr)
 End Sub
 Public Sub CloseRenderer()
     Dim i As Long
+    CloseLandscape
     If panelDC <> 0 Then SelectObject panelDC, oldPanel
     If panelBitmap <> 0 Then DeleteObject panelBitmap
     If panelDC <> 0 Then DeleteDC panelDC
@@ -88,6 +89,12 @@ Private Sub Camera()
     camYaw = Plane.heading: camPitch = Plane.pitch: camBank = Plane.bank
     If CameraMode = 2 Then
         camE = camE - Sin(camYaw) * 35: camN = camN - Cos(camYaw) * 35: camAlt = camAlt + 10
+        If Quality >= 2 Then
+            camE = camE + Sin(camYaw) * 10 - Cos(camYaw) * 12
+            camN = camN + Cos(camYaw) * 10 + Sin(camYaw) * 12
+            camYaw = camYaw + Atn(12 / 25)
+            camAlt = camAlt - 4
+        End If
         camPitch = camPitch - 0.05: camBank = camBank * 0.55
     ElseIf CameraMode = 3 Then
         camYaw = camYaw + 0.55: camPitch = -0.13: camBank = 0
@@ -97,21 +104,35 @@ End Sub
 Public Sub RenderFrame(Optional ByVal menu As Boolean = False)
     Dim t As Double, p(0 To 2) As POINTAPI, i As Long, px As Double, py As Double
     t = Clock(): Camera
-    RenderTerrain
-    SceneryPixels = 0
-    Airport
-    DrawAirportObjects
-    If CameraMode = 2 Then DrawChaseAircraft
-    StretchDIBits sceneDC, 0, 0, 480, 480, 0, 0, 480, 480, pixels(0), bmi, 0, SRCCOPY
-    Box Canvas, 0, 0, 1000, 700, RGB(115, 149, 163)
-    For i = 0 To 2
-        px = -600: py = -600
-        If i = 1 Then px = 600
-        If i = 2 Then py = 600
-        p(i).x = 500 + px * cb + py * sb
-        p(i).y = 250 - px * sb + py * cb
-    Next
-    PlgBlt Canvas, p(0), sceneDC, 0, 0, 480, 480, 0, 0, 0
+    Dim detailed As Boolean
+    If Quality >= 2 Then detailed = StartLandscape(camE, camN, camAlt, camYaw, camPitch, camBank)
+    If Quality >= 2 And Not detailed Then
+        Quality = 0
+        Application.StatusBar = "Meridian switched to Performance: " & LandscapeError
+    End If
+    If detailed Then
+        SceneryPixels = 0
+        Airport
+        DrawAirportObjects
+        If CameraMode = 2 Then DrawDetailedAircraft
+        FinishLandscape
+    Else
+        RenderTerrain
+        SceneryPixels = 0
+        Airport
+        DrawAirportObjects
+        If CameraMode = 2 Then DrawChaseAircraft
+        StretchDIBits sceneDC, 0, 0, 480, 480, 0, 0, 480, 480, pixels(0), bmi, 0, SRCCOPY
+        Box Canvas, 0, 0, 1000, 700, RGB(115, 149, 163)
+        For i = 0 To 2
+            px = -600: py = -600
+            If i = 1 Then px = 600
+            If i = 2 Then py = 600
+            p(i).x = 500 + px * cb + py * sb
+            p(i).y = 250 - px * sb + py * cb
+        Next
+        PlgBlt Canvas, p(0), sceneDC, 0, 0, 480, 480, 0, 0, 0
+    End If
     TerrainMS = (Clock() - t) * 1000: t = Clock()
     If Weather = 6 Then DrawRain
     If menu Then
@@ -243,6 +264,29 @@ Private Sub GroundQuad(ByVal along As Double, ByVal lateral As Double, ByVal len
     Dim bx(0 To 7) As Double, bz(0 To 7) As Double, bh(0 To 7) As Double
     Dim p(0 To 7) As POINTAPI, i As Long, j As Long, n As Long, u As Double
     Dim s As Double, t As Double, east As Double, north As Double, de As Double, dn As Double
+    Dim worldE(0 To 3) As Double, worldN(0 To 3) As Double, worldH(0 To 3) As Double
+    If LandscapeDrawing Then
+        Dim alongUV(0 To 3) As Double, sideUV(0 To 3) As Double, lift As Double
+        If Abs(lateral) > 16 Or width > 31 Then Exit Sub
+        lift = 0.12
+        If pavement Then lift = 0
+        If Abs(lateral) = 16 Then lift = 0.5
+        For i = 0 To 3
+            s = along - length / 2: t = lateral - width / 2
+            If i = 1 Or i = 2 Then s = along + length / 2
+            If i >= 2 Then t = lateral + width / 2
+            worldE(i) = RunwayEast(s, t): worldN(i) = RunwayNorth(s, t)
+            alongUV(i) = s: sideUV(i) = t
+            worldH(i) = RunwayHeight(worldE(i), worldN(i)) + 0.30 + lift
+        Next
+        If pavement Then
+            LandscapePavement worldE, worldN, worldH, alongUV, sideUV
+        Else
+            If Weather = 4 And Abs(lateral) < 16 Then color = RGB(68, 70, 70)
+            LandscapeFace worldE, worldN, worldH, color
+        End If
+        Exit Sub
+    End If
     For i = 0 To 3
         s = along - length / 2: t = lateral - width / 2
         If i = 1 Or i = 2 Then s = along + length / 2
@@ -512,6 +556,10 @@ Public Sub WorldFace(ByRef east() As Double, ByRef north() As Double, ByRef heig
     Dim ax(0 To 7) As Double, az(0 To 7) As Double, ah(0 To 7) As Double
     Dim bx(0 To 7) As Double, bz(0 To 7) As Double, bh(0 To 7) As Double
     Dim p(0 To 7) As POINTAPI, i As Long, j As Long, n As Long, u As Double, de As Double, dn As Double
+    If LandscapeDrawing Then
+        LandscapeFace east, north, height, color
+        Exit Sub
+    End If
     For i = 0 To 3
         de = east(i) - camE: dn = north(i) - camN
         ax(i) = de * ch - dn * sh: az(i) = de * sh + dn * ch: ah(i) = height(i) - camAlt

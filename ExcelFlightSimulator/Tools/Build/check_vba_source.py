@@ -10,7 +10,7 @@ files = list(root.glob('*.bas')) + list(root.glob('*.code'))
 procedures = set()
 for path in files:
     procedures.update(name.lower() for name in re.findall(
-        r'^\s*(?:(?:Public|Private|Friend|Static)\s+)?(?:Sub|Function)\s+(\w+)',
+        r'^\s*(?:(?:Public|Private|Friend|Static)\s+)?(?:Declare\s+(?:PtrSafe\s+)?)?(?:Sub|Function)\s+(\w+)',
         path.read_text(), re.M | re.I))
 errors = []
 for path in files:

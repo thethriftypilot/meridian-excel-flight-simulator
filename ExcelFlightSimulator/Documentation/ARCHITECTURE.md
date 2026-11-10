@@ -1,6 +1,12 @@
 # Architecture
 
-## Renderer choice
+## Detailed 3D
+
+The default quality preset renders at 1000 × 700 through the Windows OpenGL driver. Detailed 3D / 2x renders at 2000 × 1400 and downsamples to the same cockpit display. VBA chooses visible tiles, sets the camera and weather, and submits textured terrain, tree groups, airport geometry and the aircraft. It reads the finished frame into the existing GDI backbuffer before adding live instruments. A separate Windows surface owns the OpenGL context. Each frame restores the previous context before returning to Excel. A failed initialization returns the flight to the Performance preset.
+
+The 5.12 km square around KFCI uses a 4096 × 4096 aerial texture (1.25 m per sample). The surrounding area uses the original 5 m aerial imagery. Procedural tree placement follows imagery colours and excludes the runway corridor. Tree positions and building geometry are illustrative. Texture mipmaps and supported anisotropic filtering reduce shimmer at oblique angles.
+
+## Software renderers
 
 A triangle rasterizer could support arbitrary scenery but would require clipping, triangle setup, depth buffering, and many more VBA pixel operations. GDI-only projected terrain polygons would suffer object/draw-call overhead and visible facets. A voxel-space heightfield gives front-to-back terrain occlusion with one horizon value per column, direct image sampling, and economical distance-dependent ray spacing. The heightfield itself cannot draw caves or overhangs. A small complementary convex-polygon rasterizer now handles runway surfaces, airport structures, and the external aircraft.
 

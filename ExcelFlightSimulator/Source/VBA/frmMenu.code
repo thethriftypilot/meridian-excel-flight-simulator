@@ -22,7 +22,7 @@ Private Sub UserForm_Initialize()
         .AddItem "Rain / reduced visibility"
         .ListIndex = 0
     End With
-    cboQuality.AddItem "Performance": cboQuality.AddItem "Balanced": cboQuality.ListIndex = 0
+    cboQuality.AddItem "Performance": cboQuality.AddItem "Balanced": cboQuality.AddItem "Detailed 3D": cboQuality.AddItem "Detailed 3D / 2x": cboQuality.ListIndex = 2
     cboVolume.AddItem "Muted": cboVolume.AddItem "Low": cboVolume.AddItem "Normal": cboVolume.ListIndex = 2
     cboSensitivity.AddItem "Gentle": cboSensitivity.AddItem "Normal": cboSensitivity.AddItem "Direct": cboSensitivity.ListIndex = 1
 End Sub

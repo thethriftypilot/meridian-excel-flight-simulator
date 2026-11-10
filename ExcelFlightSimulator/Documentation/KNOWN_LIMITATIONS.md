@@ -1,4 +1,4 @@
-# Known limitations — release 0.4
+# Known limitations — release 0.6
 
 - Replay retains up to 18,001 samples in memory (about 30 minutes) and is silent. It is lost when starting another flight or closing Excel. Debrief sheets and personal bests persist only when the workbook is saved. Scores are local entertainment metrics, not aircraft-performance validation. Physical joystick support and editable bindings remain future work.
 
@@ -6,17 +6,17 @@ This is a playable native Excel simulator with a documented delivery audit in RE
 
 - The flight model uses lift/drag/thrust and gravity with simplified attitude dynamics. It does not implement full six-degree-of-freedom inertia, detailed propeller aerodynamics, spin recovery, ground effect, tire side forces, or certified Piper handling. Oil behavior and fixed magnetic variation are approximations.
 
-- Authentic terrain uses 20 m elevation and 5 m imagery. Most trees and buildings remain photographic surface detail. Seven airport hangars are generalized synthetic geometry with collision volumes; their footprints and heights are not surveyed obstacles. The apron and taxiway are approximate and have no route-guidance system.
+- Authentic terrain uses 20 m elevation and 5 m imagery across the world, with 1.25 m imagery in the 5.12 km square around KFCI in Detailed 3D. Tree placement uses synthetic geometry derived from imagery colours. Trees have no individual collision volumes. Detailed 3D requires a compatible Windows OpenGL driver and uses more graphics memory. Supersampling increases rendering cost. Seven airport hangars are generalized synthetic geometry with collision volumes; their footprints and heights are not surveyed obstacles. The apron and taxiway are approximate and have no route-guidance system.
 
 - Runway center and heading derive from FAA geometry effective 29 October–24 December 2026; length and width use the published 5500 × 100 ft dimensions. The local projected polygon centerline differs by about 2.3 m from published length. DEM resolution, local projection, and a modest runway depth bias prevent survey-grade precision.
 
-- The renderer has per-pixel inverse-depth tests for scenery and the chase aircraft. Terrain depth is sampled by the heightfield rays; the runway uses a 2.5% depth tolerance to suppress z-fighting against coarse elevation. Grazing views can still show edge artifacts. Terrain perspective retains a small-angle pitch approximation.
+- The Performance and Balanced renderers have per-pixel inverse-depth tests for scenery and the chase aircraft. Terrain depth is sampled by the heightfield rays; the runway uses a 2.5% depth tolerance to suppress z-fighting against coarse elevation. Grazing views can still show edge artifacts. Terrain perspective retains a small-angle pitch approximation.
 
 - The cockpit is an original six-pack-inspired panel, not a photorealistic reproduction. Altitude uses a single needle; the turn indication is an approximate banked bar rather than a gyro model. All 13 display bindings are exercised through framebuffer changes, but independent calibration against aircraft test data has not been performed.
 
 - The chase model is original low-poly geometry with fixed gear. The scenic camera looks off-axis from the airplane; it is not an independent free camera. All five views preserve output aspect ratio.
 
-- Weather is deterministic and offline. Rain uses bounded screen-space streaks, visibility, turbulence, wind and audio changes; it does not include icing, wet-runway friction or fluid simulation. Clouds are projected opacity masks, and overcast is a gray sky layer. Sun direction is preset-based, not an astronomical ephemeris. There is no live METAR import or volumetric cloud penetration.
+- Weather is deterministic and offline. Rain uses bounded screen-space streaks, visibility, turbulence, wind and audio changes; it does not include icing, wet-runway friction or fluid simulation. Clouds use precomputed panoramic lighting and opacity from a procedural volume. Their baked forms do not evolve with time. Sun direction is preset-based, not an astronomical ephemeris. There is no live METAR import or volumetric cloud penetration.
 
 - Original audio is mono PCM with about 0.4 seconds of queued buffering. Startup, touchdown and switch cues are synthesized approximations. Menu tones are original generated WAVs. Subjective speaker quality and every device configuration have not been verified.
 
