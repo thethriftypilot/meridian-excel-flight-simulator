@@ -21,3 +21,7 @@ Desktop Meridian: screenshot loaded, content within its 1700 px embed. Wix 320 p
 Wix chooses its mobile rendering using device detection; narrowing a desktop browser viewport alone retains its desktop layout. Mobile validation used Wix's device preview, not a physical-phone test.
 
 The repository README now links back to the published website. This website-only update does not modify the v0.3.0 release binaries or claim additional simulator testing.
+
+## November 10, 2026 — v0.4
+
+Published the v0.4 release link, replay screenshot, Excel debrief and scoring guide. All three images loaded on the live page. Desktop content measured 2101 px in a 2250 px embed. Wix mobile preview measured 3941 px in a 4300 px embed at 320 px width. See meridian-v04-live.png.
