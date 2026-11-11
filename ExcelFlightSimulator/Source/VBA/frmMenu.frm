@@ -44,6 +44,14 @@ Private Sub UserForm_Initialize()
         .AddItem "Night flight"
         .AddItem "Apron / taxi"
         .AddItem "Landing challenge / Crosswind"
+        .AddItem "KRIC / Richmond departure"
+        .AddItem "KOFP / Hanover departure"
+        .AddItem "Mission / KFCI to Richmond"
+        .AddItem "Mission / Richmond to Hanover"
+        .AddItem "Mission / Hanover to KFCI"
+        .AddItem "Mission / Three-airport tour"
+        .AddItem "KRIC / Runway 16 approach"
+        .AddItem "KOFP / Runway 16 approach"
         .ListIndex = 1
     End With
     With cboWeather
@@ -62,7 +70,7 @@ Private Sub UserForm_Initialize()
 End Sub
 Private Sub UserForm_Activate()
     MenuOpen = True
-    btnReplay.Enabled = (SampleCount >= 2)
+    btnReplay.enabled = (SampleCount >= 2)
 End Sub
 Private Sub ConfigureFlight()
     Scenario = cboScenario.ListIndex

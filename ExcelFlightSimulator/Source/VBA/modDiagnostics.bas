@@ -21,7 +21,7 @@ Public Function WorkingSetMB() As Double
 End Function
 'Native continuous renderer/audio soak, deliberately independent of desktop focus.
 'This is a diagnostic harness, not a claim that physical controls were exercised.
-Public Function RunSoak(Optional ByVal seconds As Double = 1200, Optional ByVal detailed As Boolean = False, Optional ByVal supersample As Boolean = False) As String
+Public Function RunSoak(Optional ByVal seconds As Double = 1200, Optional ByVal detailed As Boolean = False, Optional ByVal supersample As Boolean = False, Optional ByVal startScenario As Long = 1) As String
     Dim start As Double, previous As Double, current As Double, accumulator As Double, frameStart As Double
     Dim frames As Long, f As Integer, nextLog As Double, initialGDI As Long, peakGDI As Long, currentGDI As Long
     Dim initialMB As Double, peakMB As Double, memory As Double, errText As String, opened As Boolean
@@ -31,9 +31,10 @@ Public Function RunSoak(Optional ByVal seconds As Double = 1200, Optional ByVal 
     If supersample Then detailed = True
     If detailed Then prefix = "graphics-soak": fastestBudget = 1# / 60
     If supersample Then prefix = "graphics-2x-soak"
+    If startScenario <> 1 Then prefix = "region-" & startScenario & "-" & prefix
     On Error GoTo failed
     errText = "load world": LoadWorld
-    errText = "reset flight": ResetFlight 1: SetWeather 0
+    errText = "reset flight": ResetFlight startScenario: SetWeather 0
     Quality = 0: Volume = 0.2: Muted = False: Paused = False: Demo = True
     If detailed Then Quality = 2
     If supersample Then Quality = 3

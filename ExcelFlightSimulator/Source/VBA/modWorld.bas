@@ -40,10 +40,15 @@ Public Sub LoadWorld()
             If ix < 1023 Then SunsetShade(index) = Clamp(0.86 + (Heights(index + 1) - Heights(index)) * 0.035, 0.45, 1.25)
         Next
     Next
+    LoadRegion
     WorldReady = True
 End Sub
 Public Function TerrainGround(ByVal east As Double, ByVal north As Double) As Double
     Dim fx As Double, fy As Double, ix As Long, iy As Long, i As Long, a As Double, b As Double
+    If Abs(east) > HalfWorld Or Abs(north) > HalfWorld Then
+        TerrainGround = RegionElevation(east, north)
+        Exit Function
+    End If
     fx = Clamp((east + HalfWorld) / 20 - 0.5, 0, 1022.999)
     fy = Clamp((HalfWorld - north) / 20 - 0.5, 0, 1022.999)
     ix = Int(fx): iy = Int(fy): fx = fx - ix: fy = fy - iy: i = ix + iy * 1024
@@ -52,7 +57,14 @@ Public Function TerrainGround(ByVal east As Double, ByVal north As Double) As Do
     TerrainGround = a * (1 - fy) + b * fy
 End Function
 Public Function Ground(ByVal east As Double, ByVal north As Double) As Double
+    Dim runway As Long
     Ground = TerrainGround(east, north)
+    For runway = 1 To RunwayCount - 1
+        If OnRegionRunway(runway, east, north) Then
+            Ground = RegionRunwayHeight(runway, east, north)
+            Exit Function
+        End If
+    Next
     If OnRunway(east, north) Then Ground = RunwayHeight(east, north)
 End Function
 Public Function AlongRunway(ByVal east As Double, ByVal north As Double) As Double

@@ -1,4 +1,6 @@
-# Known limitations — release 0.6
+# Known limitations — release 0.7
+
+The regional extension is coarser outside airport patches. KRIC/KOFP terminals are not individually modeled; trees have no collision volumes; aircraft shadows use a local ground plane. See EXPLORATION.md for resolutions and mission rules.
 
 - Replay retains up to 18,001 samples in memory (about 30 minutes) and is silent. It is lost when starting another flight or closing Excel. Debrief sheets and personal bests persist only when the workbook is saved. Scores are local entertainment metrics, not aircraft-performance validation. Physical joystick support and editable bindings remain future work.
 
@@ -6,7 +8,7 @@ This is a playable native Excel simulator with a documented delivery audit in RE
 
 - The flight model uses lift/drag/thrust and gravity with simplified attitude dynamics. It does not implement full six-degree-of-freedom inertia, detailed propeller aerodynamics, spin recovery, ground effect, tire side forces, or certified Piper handling. Oil behavior and fixed magnetic variation are approximations.
 
-- Authentic terrain uses 20 m elevation and 5 m imagery across the world, with 1.25 m imagery in the 5.12 km square around KFCI in Detailed 3D. Tree placement uses synthetic geometry derived from imagery colours. Trees have no individual collision volumes. Detailed 3D requires a compatible Windows OpenGL driver and uses more graphics memory. Supersampling increases rendering cost. Seven airport hangars are generalized synthetic geometry with collision volumes; their footprints and heights are not surveyed obstacles. The apron and taxiway are approximate and have no route-guidance system.
+- Authentic terrain uses 20 m elevation and 5 m imagery across the original KFCI tile, with 1.25 m imagery in the 5.12 km square around KFCI in Detailed 3D. Tree placement uses synthetic geometry derived from imagery colours. Trees have no individual collision volumes. Detailed 3D requires a compatible Windows OpenGL driver and uses more graphics memory. Supersampling increases rendering cost. Seven airport hangars are generalized synthetic geometry with collision volumes; their footprints and heights are not surveyed obstacles. The apron and taxiway are approximate and have no route-guidance system.
 
 - Runway center and heading derive from FAA geometry effective 29 October–24 December 2026; length and width use the published 5500 × 100 ft dimensions. The local projected polygon centerline differs by about 2.3 m from published length. DEM resolution, local projection, and a modest runway depth bias prevent survey-grade precision.
 

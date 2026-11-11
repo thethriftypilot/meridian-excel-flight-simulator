@@ -1,0 +1,844 @@
+{
+  "objectIdFieldName": "OBJECTID",
+  "uniqueIdField": {
+    "name": "OBJECTID",
+    "isSystemMaintained": true
+  },
+  "globalIdFieldName": "",
+  "geometryProperties": {
+    "shapeAreaFieldName": "Shape__Area",
+    "shapeLengthFieldName": "Shape__Length",
+    "units": "esriDecimalDegrees"
+  },
+  "geometryType": "esriGeometryPolygon",
+  "spatialReference": {
+    "wkid": 4326,
+    "latestWkid": 4326
+  },
+  "fields": [
+    {
+      "name": "OBJECTID",
+      "type": "esriFieldTypeOID",
+      "alias": "OBJECTID",
+      "sqlType": "sqlTypeOther",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "GLOBAL_ID",
+      "type": "esriFieldTypeString",
+      "alias": "GLOBAL_ID",
+      "sqlType": "sqlTypeOther",
+      "length": 50,
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "AIRPORT_ID",
+      "type": "esriFieldTypeString",
+      "alias": "AIRPORT_ID",
+      "sqlType": "sqlTypeOther",
+      "length": 50,
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "DESIGNATOR",
+      "type": "esriFieldTypeString",
+      "alias": "DESIGNATOR",
+      "sqlType": "sqlTypeOther",
+      "length": 254,
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "LENGTH",
+      "type": "esriFieldTypeDouble",
+      "alias": "LENGTH",
+      "sqlType": "sqlTypeOther",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "WIDTH",
+      "type": "esriFieldTypeDouble",
+      "alias": "WIDTH",
+      "sqlType": "sqlTypeOther",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "DIM_UOM",
+      "type": "esriFieldTypeString",
+      "alias": "DIM_UOM",
+      "sqlType": "sqlTypeOther",
+      "length": 254,
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "COMP_CODE",
+      "type": "esriFieldTypeString",
+      "alias": "COMP_CODE",
+      "sqlType": "sqlTypeOther",
+      "length": 254,
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "LIGHTACTV",
+      "type": "esriFieldTypeSmallInteger",
+      "alias": "LIGHTACTV",
+      "sqlType": "sqlTypeOther",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "LIGHTINTNS",
+      "type": "esriFieldTypeString",
+      "alias": "LIGHTINTNS",
+      "sqlType": "sqlTypeOther",
+      "length": 254,
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "AK_LOW",
+      "type": "esriFieldTypeSmallInteger",
+      "alias": "AK_LOW",
+      "sqlType": "sqlTypeOther",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "AK_HIGH",
+      "type": "esriFieldTypeSmallInteger",
+      "alias": "AK_HIGH",
+      "sqlType": "sqlTypeOther",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "US_LOW",
+      "type": "esriFieldTypeSmallInteger",
+      "alias": "US_LOW",
+      "sqlType": "sqlTypeOther",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "US_HIGH",
+      "type": "esriFieldTypeSmallInteger",
+      "alias": "US_HIGH",
+      "sqlType": "sqlTypeOther",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "US_AREA",
+      "type": "esriFieldTypeSmallInteger",
+      "alias": "US_AREA",
+      "sqlType": "sqlTypeOther",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "PACIFIC",
+      "type": "esriFieldTypeSmallInteger",
+      "alias": "PACIFIC",
+      "sqlType": "sqlTypeOther",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "Shape__Area",
+      "type": "esriFieldTypeDouble",
+      "alias": "Shape__Area",
+      "sqlType": "sqlTypeDouble",
+      "domain": null,
+      "defaultValue": null
+    },
+    {
+      "name": "Shape__Length",
+      "type": "esriFieldTypeDouble",
+      "alias": "Shape__Length",
+      "sqlType": "sqlTypeDouble",
+      "domain": null,
+      "defaultValue": null
+    }
+  ],
+  "features": [
+    {
+      "attributes": {
+        "OBJECTID": 16325,
+        "GLOBAL_ID": "A0458A52-22BA-4B79-BDE4-8618F82B80DE",
+        "AIRPORT_ID": "9DE6885C-3021-4CBE-86BD-7E3E24774172",
+        "DESIGNATOR": "H1",
+        "LENGTH": 53,
+        "WIDTH": 53,
+        "DIM_UOM": "FT",
+        "COMP_CODE": "MATS",
+        "LIGHTACTV": 2,
+        "LIGHTINTNS": "OTHER",
+        "AK_LOW": 0,
+        "AK_HIGH": 0,
+        "US_LOW": 0,
+        "US_HIGH": 0,
+        "US_AREA": 0,
+        "PACIFIC": 0,
+        "Shape__Area": 2.6604539016261697e-08,
+        "Shape__Length": 0.0006566760000623617
+      },
+      "geometry": {
+        "rings": [
+          [
+            [
+              -77.4293109432157,
+              37.5396708281186
+            ],
+            [
+              -77.429493729272,
+              37.539670828112
+            ],
+            [
+              -77.4294937292803,
+              37.5398163801422
+            ],
+            [
+              -77.429310943224,
+              37.5398163801488
+            ],
+            [
+              -77.4293109432157,
+              37.5396708281186
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 16328,
+        "GLOBAL_ID": "B2937D1F-33CB-4998-B6A9-8FCADCCAB897",
+        "AIRPORT_ID": "8FC830A5-A5C7-4BB1-AAFB-D35D5C8715F5",
+        "DESIGNATOR": "10/28",
+        "LENGTH": 1600,
+        "WIDTH": 100,
+        "DIM_UOM": "FT",
+        "COMP_CODE": "GRASS",
+        "LIGHTACTV": null,
+        "LIGHTINTNS": null,
+        "AK_LOW": 0,
+        "AK_HIGH": 0,
+        "US_LOW": 0,
+        "US_HIGH": 0,
+        "US_AREA": 0,
+        "PACIFIC": 0,
+        "Shape__Area": 1.5168832305789692e-06,
+        "Shape__Length": 0.011595763926244061
+      },
+      "geometry": {
+        "rings": [
+          [
+            [
+              -77.2985717571523,
+              37.613938669254
+            ],
+            [
+              -77.2930490414444,
+              37.6138619844375
+            ],
+            [
+              -77.2930550764306,
+              37.6135874053804
+            ],
+            [
+              -77.2985777721384,
+              37.6136640891969
+            ],
+            [
+              -77.2985717571523,
+              37.613938669254
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 16337,
+        "GLOBAL_ID": "5C72F48F-5EA9-408A-9386-44329A7046B7",
+        "AIRPORT_ID": "F76C2515-E455-4D9A-A295-FB4F237274F2",
+        "DESIGNATOR": "H1",
+        "LENGTH": 100,
+        "WIDTH": 100,
+        "DIM_UOM": "FT",
+        "COMP_CODE": "CONC",
+        "LIGHTACTV": 0,
+        "LIGHTINTNS": "OTHER",
+        "AK_LOW": 0,
+        "AK_HIGH": 0,
+        "US_LOW": 0,
+        "US_HIGH": 0,
+        "US_AREA": 0,
+        "PACIFIC": 0,
+        "Shape__Area": 9.472319106862415e-08,
+        "Shape__Length": 0.0012390860001155522
+      },
+      "geometry": {
+        "rings": [
+          [
+            [
+              -77.4308298771862,
+              37.5484781398918
+            ],
+            [
+              -77.4308298781705,
+              37.5482035158348
+            ],
+            [
+              -77.4311747962768,
+              37.5482035158223
+            ],
+            [
+              -77.4311747972925,
+              37.5484781398793
+            ],
+            [
+              -77.4308298771862,
+              37.5484781398918
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 16334,
+        "GLOBAL_ID": "D34F37B6-F511-444F-9429-DED32B398532",
+        "AIRPORT_ID": "69E61D8F-915F-4B1D-9666-6338F1F19CD9",
+        "DESIGNATOR": "16/34",
+        "LENGTH": 9003,
+        "WIDTH": 150,
+        "DIM_UOM": "FT",
+        "COMP_CODE": "ASPH",
+        "LIGHTACTV": 0,
+        "LIGHTINTNS": "LIH",
+        "AK_LOW": 0,
+        "AK_HIGH": 0,
+        "US_LOW": 1,
+        "US_HIGH": 1,
+        "US_AREA": 0,
+        "PACIFIC": 0,
+        "Shape__Area": 1.2784710179403191e-05,
+        "Shape__Length": 0.0543854209304281
+      },
+      "geometry": {
+        "rings": [
+          [
+            [
+              -77.3237968693855,
+              37.5165331431212
+            ],
+            [
+              -77.3233609012638,
+              37.516754729183
+            ],
+            [
+              -77.3066690419369,
+              37.4959107784507
+            ],
+            [
+              -77.3071049380587,
+              37.4956892533889
+            ],
+            [
+              -77.3237968693855,
+              37.5165331431212
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 16335,
+        "GLOBAL_ID": "BE327862-59AB-4184-806C-231A651554FF",
+        "AIRPORT_ID": "13340FC9-37A9-4C5A-9201-373219D8F57C",
+        "DESIGNATOR": "H1",
+        "LENGTH": 100,
+        "WIDTH": 100,
+        "DIM_UOM": "FT",
+        "COMP_CODE": "ASPH",
+        "LIGHTACTV": 0,
+        "LIGHTINTNS": "OTHER",
+        "AK_LOW": 0,
+        "AK_HIGH": 0,
+        "US_LOW": 0,
+        "US_HIGH": 0,
+        "US_AREA": 0,
+        "PACIFIC": 0,
+        "Shape__Area": 9.465838957112283e-08,
+        "Shape__Length": 0.0012386120000692277
+      },
+      "geometry": {
+        "rings": [
+          [
+            [
+              -77.4621438938372,
+              37.4959618358539
+            ],
+            [
+              -77.4624885719433,
+              37.4959618358415
+            ],
+            [
+              -77.462488572959,
+              37.4962364628985
+            ],
+            [
+              -77.4621438928528,
+              37.496236462911
+            ],
+            [
+              -77.4621438938372,
+              37.4959618358539
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 23016,
+        "GLOBAL_ID": "7B8DA800-F285-46F3-B4FC-62091F345CBD",
+        "AIRPORT_ID": "8FF392B6-BED8-4DA2-BD4C-A063C527ACAB",
+        "DESIGNATOR": "H1",
+        "LENGTH": 45,
+        "WIDTH": 45,
+        "DIM_UOM": "FT",
+        "COMP_CODE": "CONC",
+        "LIGHTACTV": 0,
+        "LIGHTINTNS": "OTHER",
+        "AK_LOW": 0,
+        "AK_HIGH": 0,
+        "US_LOW": 0,
+        "US_HIGH": 0,
+        "US_AREA": 0,
+        "PACIFIC": 0,
+        "Shape__Area": 1.9224899006076157e-08,
+        "Shape__Length": 0.0005582970001154978
+      },
+      "geometry": {
+        "rings": [
+          [
+            [
+              -77.4528551238372,
+              37.7203109846852
+            ],
+            [
+              -77.45285512383,
+              37.7201874076596
+            ],
+            [
+              -77.4530106948781,
+              37.7201874076539
+            ],
+            [
+              -77.4530106958852,
+              37.7203109846795
+            ],
+            [
+              -77.4528551238372,
+              37.7203109846852
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 16326,
+        "GLOBAL_ID": "7DAF0A3E-ED84-4988-8BCE-5B563B673AB5",
+        "AIRPORT_ID": "BADBCA41-B7C7-4301-9EAA-CF62FA724B79",
+        "DESIGNATOR": "H1",
+        "LENGTH": 40,
+        "WIDTH": 40,
+        "DIM_UOM": "FT",
+        "COMP_CODE": "ASPH",
+        "LIGHTACTV": 0,
+        "LIGHTINTNS": "OTHER",
+        "AK_LOW": 0,
+        "AK_HIGH": 0,
+        "US_LOW": 0,
+        "US_HIGH": 0,
+        "US_AREA": 0,
+        "PACIFIC": 0,
+        "Shape__Area": 1.5162640920607373e-08,
+        "Shape__Length": 0.0004957599999215745
+      },
+      "geometry": {
+        "rings": [
+          [
+            [
+              -77.5135333496009,
+              37.5823525739201
+            ],
+            [
+              -77.5136713796433,
+              37.582352573915
+            ],
+            [
+              -77.5136713796496,
+              37.5824624239378
+            ],
+            [
+              -77.5135333496072,
+              37.5824624239428
+            ],
+            [
+              -77.5135333496009,
+              37.5823525739201
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 16333,
+        "GLOBAL_ID": "77BA5618-98CB-4B36-A721-BC02E96BD6CC",
+        "AIRPORT_ID": "69E61D8F-915F-4B1D-9666-6338F1F19CD9",
+        "DESIGNATOR": "02/20",
+        "LENGTH": 6607,
+        "WIDTH": 150,
+        "DIM_UOM": "FT",
+        "COMP_CODE": "ASPH",
+        "LIGHTACTV": 0,
+        "LIGHTINTNS": "LIH",
+        "AK_LOW": 0,
+        "AK_HIGH": 0,
+        "US_LOW": 1,
+        "US_HIGH": 1,
+        "US_AREA": 0,
+        "PACIFIC": 0,
+        "Shape__Area": 9.382673852087464e-06,
+        "Shape__Length": 0.037875461305768895
+      },
+      "geometry": {
+        "rings": [
+          [
+            [
+              -77.3246086366381,
+              37.5165741721005
+            ],
+            [
+              -77.3241056914776,
+              37.5164782560987
+            ],
+            [
+              -77.3294084971105,
+              37.4988320132396
+            ],
+            [
+              -77.3299113312709,
+              37.4989279072414
+            ],
+            [
+              -77.3246086366381,
+              37.5165741721005
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 21253,
+        "GLOBAL_ID": "6F0D9B97-65F6-45C8-A363-607CA046A6FB",
+        "AIRPORT_ID": "FD428846-24BE-4D19-912E-4109564B1C10",
+        "DESIGNATOR": "H1",
+        "LENGTH": 53,
+        "WIDTH": 53,
+        "DIM_UOM": "FT",
+        "COMP_CODE": "MATS",
+        "LIGHTACTV": 0,
+        "LIGHTINTNS": "OTHER",
+        "AK_LOW": 0,
+        "AK_HIGH": 0,
+        "US_LOW": 0,
+        "US_HIGH": 0,
+        "US_AREA": 0,
+        "PACIFIC": 0,
+        "Shape__Area": 2.660476638993714e-08,
+        "Shape__Length": 0.0006566790000340707
+      },
+      "geometry": {
+        "rings": [
+          [
+            [
+              -77.4315387199615,
+              37.5407136022545
+            ],
+            [
+              -77.4315387209532,
+              37.5405680512243
+            ],
+            [
+              -77.4317215090095,
+              37.5405680512176
+            ],
+            [
+              -77.4317215090178,
+              37.5407136022479
+            ],
+            [
+              -77.4315387199615,
+              37.5407136022545
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 16158,
+        "GLOBAL_ID": "D48A3848-E54B-4634-B2EF-36452412A1A7",
+        "AIRPORT_ID": "08633FB6-7BD0-406E-B68E-F16A20F75C40",
+        "DESIGNATOR": "14/32",
+        "LENGTH": 2200,
+        "WIDTH": 80,
+        "DIM_UOM": "FT",
+        "COMP_CODE": "GRASS",
+        "LIGHTACTV": null,
+        "LIGHTINTNS": null,
+        "AK_LOW": 0,
+        "AK_HIGH": 0,
+        "US_LOW": 0,
+        "US_HIGH": 0,
+        "US_AREA": 0,
+        "PACIFIC": 0,
+        "Shape__Area": 1.670812480369932e-06,
+        "Shape__Length": 0.014442161719545663
+      },
+      "geometry": {
+        "rings": [
+          [
+            [
+              -77.3052598641278,
+              37.7172147154066
+            ],
+            [
+              -77.2995201341289,
+              37.7132510867944
+            ],
+            [
+              -77.2997015711753,
+              37.7130852867535
+            ],
+            [
+              -77.3054412971743,
+              37.7170489063657
+            ],
+            [
+              -77.3052598641278,
+              37.7172147154066
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 18090,
+        "GLOBAL_ID": "DF158A90-FEF4-4180-9F41-D5EE1278E0E0",
+        "AIRPORT_ID": "08761CF5-46CE-45A0-AE15-5D48AC907951",
+        "DESIGNATOR": "H1",
+        "LENGTH": 160,
+        "WIDTH": 60,
+        "DIM_UOM": "FT",
+        "COMP_CODE": "ASPH",
+        "LIGHTACTV": 0,
+        "LIGHTINTNS": "OTHER",
+        "AK_LOW": 0,
+        "AK_HIGH": 0,
+        "US_LOW": 0,
+        "US_HIGH": 0,
+        "US_AREA": 0,
+        "PACIFIC": 0,
+        "Shape__Area": 9.095015229831915e-08,
+        "Shape__Length": 0.0012927710000678883
+      },
+      "geometry": {
+        "rings": [
+          [
+            [
+              -77.4621210755767,
+              37.561616084485
+            ],
+            [
+              -77.4621210765516,
+              37.5611766863938
+            ],
+            [
+              -77.4623280636153,
+              37.5611766863863
+            ],
+            [
+              -77.4623280636405,
+              37.5616160844775
+            ],
+            [
+              -77.4621210755767,
+              37.561616084485
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 16336,
+        "GLOBAL_ID": "FA9BC960-CCDD-40D8-ADA7-77F5950A6D54",
+        "AIRPORT_ID": "6D3F98B1-9FA7-4381-B75B-750D911B03F3",
+        "DESIGNATOR": "H1",
+        "LENGTH": 40,
+        "WIDTH": 40,
+        "DIM_UOM": "FT",
+        "COMP_CODE": "ASPH",
+        "LIGHTACTV": 3,
+        "LIGHTINTNS": "OTHER",
+        "AK_LOW": 0,
+        "AK_HIGH": 0,
+        "US_LOW": 0,
+        "US_HIGH": 0,
+        "US_AREA": 0,
+        "PACIFIC": 0,
+        "Shape__Area": 1.514899850008078e-08,
+        "Shape__Length": 0.0004955140000220126
+      },
+      "geometry": {
+        "rings": [
+          [
+            [
+              -77.5265917447529,
+              37.514756854424
+            ],
+            [
+              -77.5265917447466,
+              37.5146470034012
+            ],
+            [
+              -77.5267296507891,
+              37.5146470033962
+            ],
+            [
+              -77.5267296507954,
+              37.514756854419
+            ],
+            [
+              -77.5265917447529,
+              37.514756854424
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 16324,
+        "GLOBAL_ID": "EE8E3012-093B-483E-B3DE-A9A8808B2D89",
+        "AIRPORT_ID": "D19293F4-563A-4805-AF18-A7A8D5C36DA4",
+        "DESIGNATOR": "H1",
+        "LENGTH": 30,
+        "WIDTH": 30,
+        "DIM_UOM": "FT",
+        "COMP_CODE": "CONC",
+        "LIGHTACTV": null,
+        "LIGHTINTNS": null,
+        "AK_LOW": 0,
+        "AK_HIGH": 0,
+        "US_LOW": 0,
+        "US_HIGH": 0,
+        "US_AREA": 0,
+        "PACIFIC": 0,
+        "Shape__Area": 8.531515049980953e-09,
+        "Shape__Length": 0.00037187600003107946
+      },
+      "geometry": {
+        "rings": [
+          [
+            [
+              -77.5414200433786,
+              37.6030579751972
+            ],
+            [
+              -77.5415235944105,
+              37.6030579751934
+            ],
+            [
+              -77.5415235944153,
+              37.6031403622105
+            ],
+            [
+              -77.5414200433834,
+              37.6031403622143
+            ],
+            [
+              -77.5414200433786,
+              37.6030579751972
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "attributes": {
+        "OBJECTID": 16330,
+        "GLOBAL_ID": "ECA45435-8FBA-42D3-927C-7CC473B6471B",
+        "AIRPORT_ID": "07817D3E-53AE-4E0E-BD54-25AFE59CDA6E",
+        "DESIGNATOR": "16/34",
+        "LENGTH": 5402,
+        "WIDTH": 100,
+        "DIM_UOM": "FT",
+        "COMP_CODE": "ASPH",
+        "LIGHTACTV": 2,
+        "LIGHTINTNS": "LIH",
+        "AK_LOW": 0,
+        "AK_HIGH": 0,
+        "US_LOW": 1,
+        "US_HIGH": 1,
+        "US_AREA": 0,
+        "PACIFIC": 0,
+        "Shape__Area": 5.127433496454614e-06,
+        "Shape__Length": 0.03245556018845887
+      },
+      "geometry": {
+        "rings": [
+          [
+            [
+              -77.432079222402,
+              37.7024726407527
+            ],
+            [
+              -77.4415000490453,
+              37.7152796030583
+            ],
+            [
+              -77.4412015949613,
+              37.7154181770979
+            ],
+            [
+              -77.4317808033179,
+              37.7026111907922
+            ],
+            [
+              -77.432079222402,
+              37.7024726407527
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

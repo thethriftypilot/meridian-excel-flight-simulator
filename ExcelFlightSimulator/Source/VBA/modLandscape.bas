@@ -45,6 +45,13 @@ Private Declare PtrSafe Sub glAlphaFunc Lib "opengl32" (ByVal mode As Long, ByVa
 Private Declare PtrSafe Sub glDrawBuffer Lib "opengl32" (ByVal mode As Long)
 Private Declare PtrSafe Sub glReadBuffer Lib "opengl32" (ByVal mode As Long)
 
+Private Declare PtrSafe Sub glMultMatrixf Lib "opengl32" (ByVal matrix As LongPtr)
+Private Declare PtrSafe Sub glBlendFunc Lib "opengl32" (ByVal source As Long, ByVal destination As Long)
+Private Declare PtrSafe Sub glColor4f Lib "opengl32" (ByVal red As Single, ByVal green As Single, ByVal blue As Single, ByVal alpha As Single)
+Private Declare PtrSafe Sub glStencilFunc Lib "opengl32" (ByVal comparison As Long, ByVal reference As Long, ByVal mask As Long)
+Private Declare PtrSafe Sub glStencilOp Lib "opengl32" (ByVal stencilFail As Long, ByVal depthFail As Long, ByVal depthPass As Long)
+Private Declare PtrSafe Sub glDepthMask Lib "opengl32" (ByVal enabled As Byte)
+
 Private Const Texture2D As Long = &HDE1
 Private Const BGRA As Long = &H80E1&
 Private Const UnsignedByte As Long = &H1401
@@ -58,6 +65,8 @@ Private counts(0 To 255) As Long, offsets(0 To 255) As Long
 Private info As BITMAPINFOHEADER
 Private rejected As Boolean
 Public LandscapeDrawing As Boolean, LandscapeError As String
+Private regionMesh() As Single, ricMesh() As Single, ofpMesh() As Single
+Private ricTrees() As Single, ofpTrees() As Single
 Private skyName As String, airframe() As Single, nightAirframe() As Single, aniso As Single
 
 Private Sub LoadFloats(ByVal file As String, ByRef values() As Single)
@@ -94,7 +103,7 @@ Private Sub Setup()
     surface = CreateWindowExA(0, "STATIC", "Meridian offscreen renderer", &H86000000, 0, 0, renderWidth, renderHeight, 0, 0, 0, 0)
     If surface = 0 Then Err.Raise 5, , "Cannot create OpenGL surface"
     dc = GetDC(surface)
-    pfd(0) = 40: pfd(2) = 1: pfd(4) = 37: pfd(9) = 32: pfd(23) = 24
+    pfd(0) = 40: pfd(2) = 1: pfd(4) = 37: pfd(9) = 32: pfd(23) = 24: pfd(24) = 8
     fmt = ChoosePixelFormat(dc, pfd(0))
     If fmt = 0 Then Err.Raise 5, , "No compatible OpenGL pixel format"
     If SetPixelFormat(dc, fmt, pfd(0)) = 0 Then Err.Raise 5, , "Cannot set OpenGL pixel format"
@@ -145,6 +154,14 @@ Private Sub Setup()
         nightAirframe(i + 1) = airframe(i + 1) * 0.27
         nightAirframe(i + 2) = airframe(i + 2) * 0.35
     Next
+    LoadFloats ThisWorkbook.Path & "\Assets\Region\mesh.f32", regionMesh
+    LoadFloats ThisWorkbook.Path & "\Assets\Region\1-mesh.f32", ricMesh
+    LoadFloats ThisWorkbook.Path & "\Assets\Region\2-mesh.f32", ofpMesh
+    LoadFloats ThisWorkbook.Path & "\Assets\Region\1-trees.f32", ricTrees
+    LoadFloats ThisWorkbook.Path & "\Assets\Region\2-trees.f32", ofpTrees
+    LoadRegionTexture 7, "photo.rgba", 4096
+    LoadRegionTexture 8, "1-photo.rgba", 2048
+    LoadRegionTexture 9, "2-photo.rgba", 2048
     info.biSize = 40: info.biWidth = renderWidth: info.biHeight = renderHeight: info.biPlanes = 1: info.biBitCount = 32
     glViewport 0, 0, renderWidth, renderHeight
     glDrawBuffer &H405: glReadBuffer &H405
@@ -160,6 +177,7 @@ Public Sub CloseLandscape()
     End If
     If dc <> 0 Then ReleaseDC surface, dc: dc = 0
     If surface <> 0 Then DestroyWindow surface: surface = 0
+    Erase regionMesh: Erase ricMesh: Erase ofpMesh: Erase ricTrees: Erase ofpTrees
     Erase output: Erase mesh: Erase grove: Erase airframe: Erase nightAirframe: skyName = "": rejected = False
 End Sub
 
@@ -217,7 +235,7 @@ Public Function StartLandscape(ByVal east As Double, ByVal north As Double, ByVa
         Err.Raise 5, , "Cannot reactivate OpenGL"
     End If
     glClearColor 0.48, 0.58, 0.68, 1
-    glClear &H4100
+    glClear &H4500
     glMatrixMode &H1701: glLoadIdentity
     glFrustum -500 / 750, 500 / 750, -450 / 750, 250 / 750, 1, 30000
     glMatrixMode &H1700: glLoadIdentity
@@ -237,6 +255,11 @@ Public Function StartLandscape(ByVal east As Double, ByVal north As Double, ByVa
     End Select
     glFogi &HB65, &H2601: glFogf &HB63, Visibility * 0.18: glFogf &HB64, Visibility
     glFogfv &HB66, VarPtr(fog(0)): glColor3f light, light, light
+    glBindTexture Texture2D, 7
+    glInterleavedArrays &H2A27, 0, VarPtr(regionMesh(0))
+    glDrawArrays 4, 0, (UBound(regionMesh) + 1) \ 5
+    DrawRegionPatch east, north, 1, ricMesh, ricTrees, 8
+    DrawRegionPatch east, north, 2, ofpMesh, ofpTrees, 9
     glInterleavedArrays &H2A27, 0, VarPtr(mesh(0))
     For i = 0 To 255
         tx = i Mod 16: tz = i \ 16
@@ -296,6 +319,7 @@ Public Sub FinishLandscape()
     Dim oldMode As Long
     If CameraMode = 0 Then Windshield
     glReadPixels 0, 0, renderWidth, renderHeight, BGRA, UnsignedByte, VarPtr(output(0))
+    If glGetError() <> 0 Then Err.Raise 5, , "Graphics driver reported a rendering error"
     If renderWidth > width Then
         oldMode = SetStretchBltMode(Canvas, 4)
         SetBrushOrgEx Canvas, 0, 0, 0
@@ -307,19 +331,76 @@ Public Sub FinishLandscape()
 End Sub
 
 
-Public Sub DrawDetailedAircraft()
-    glPushMatrix
+Private Sub AircraftTransform()
     glTranslated Plane.east, Plane.altitude, -Plane.north
     glRotated -Plane.heading * 180 / PI, 0, 1, 0
     glRotated Plane.pitch * 180 / PI, 1, 0, 0
     glRotated -Plane.bank * 180 / PI, 0, 0, 1
+End Sub
+
+Public Sub DrawDetailedAircraft()
+    glPushMatrix
+    AircraftTransform
     If Weather = 4 Then
         glInterleavedArrays &H2A24, 0, VarPtr(nightAirframe(0))
     Else
         glInterleavedArrays &H2A24, 0, VarPtr(airframe(0))
     End If
     glDrawArrays 4, 0, (UBound(airframe) + 1) \ 6
+    DrawPropeller
     glPopMatrix
+End Sub
+
+Private Sub DrawPropeller()
+    Dim i As Long, angle As Double, alpha As Single
+    glPushMatrix
+    glTranslated 0, 0.12, -3.02
+    If Plane.rpm > 400 Then
+        glEnable &HBE2: glBlendFunc &H302, &H303
+        glDepthMask 0
+        glColor4f 0.65, 0.66, 0.62, 0.13
+        glBegin 6
+        glVertex3f 0, 0, 0
+        For i = 0 To 48
+            angle = i * 2 * PI / 48
+            glVertex3f Cos(angle) * 0.91, Sin(angle) * 0.91, 0
+        Next
+        glEnd
+        glDepthMask 1: glDisable &HBE2
+    Else
+        glRotated Plane.elapsed * Plane.rpm * 6, 0, 0, 1
+        glColor3f 0.13, 0.14, 0.14
+        glBegin 7
+        glVertex3f -0.07, -0.91, 0: glVertex3f 0.07, -0.91, 0
+        glVertex3f 0.07, 0.91, 0: glVertex3f -0.07, 0.91, 0
+        glEnd
+    End If
+    glPopMatrix
+End Sub
+
+Public Sub DrawAircraftShadow()
+    Dim matrix(0 To 15) As Single, altitude As Double, floor As Double, sx As Double, sz As Double
+    If Weather <> 0 And Weather <> 1 And Weather <> 2 Then Exit Sub
+    altitude = Plane.altitude - Ground(Plane.east, Plane.north)
+    If altitude > 180 Then Exit Sub
+    sx = -0.707: sz = -0.707
+    If Weather = 1 Then sx = -4: sz = 0
+    floor = Ground(Plane.east - sx * altitude, Plane.north + sz * altitude) + 0.46
+    matrix(0) = 1: matrix(4) = -sx: matrix(6) = -sz: matrix(10) = 1
+    matrix(12) = sx * floor: matrix(13) = floor: matrix(14) = sz * floor: matrix(15) = 1
+    glEnable &HBE2: glBlendFunc &H302, &H303: glDepthMask 0
+    glColor4f 0.02, 0.04, 0.04, 0.25 * Clamp(1 - altitude / 180, 0, 1)
+    glPushMatrix
+    glMultMatrixf VarPtr(matrix(0))
+    AircraftTransform
+    glEnable &HB90
+    glStencilFunc &H202, 0, 1
+    glStencilOp &H1E00, &H1E00, &H1E02
+    glInterleavedArrays &H2A21, 24, VarPtr(airframe(3))
+    glDrawArrays 4, 0, (UBound(airframe) + 1) \ 6
+    glDisable &HB90
+    glPopMatrix
+    glDepthMask 1: glDisable &HBE2
 End Sub
 
 Public Sub LandscapePavement(ByRef e() As Double, ByRef n() As Double, ByRef h() As Double, ByRef s() As Double, ByRef lateral() As Double)
@@ -336,4 +417,33 @@ Public Sub LandscapePavement(ByRef e() As Double, ByRef n() As Double, ByRef h()
     Next
     glEnd
     glDisable Texture2D
+End Sub
+
+Private Sub LoadRegionTexture(ByVal textureID As Long, ByVal name As String, ByVal size As Long)
+    Dim texture() As Long, file As Integer, path As String
+    path = ThisWorkbook.Path & "\Assets\Region\" & name
+    If FileLen(path) <> size * size * 4 Then Err.Raise 5, , "Invalid regional texture"
+    ReDim texture(0 To size * size - 1)
+    file = FreeFile
+    Open path For Binary Access Read As #file
+    Get #file, , texture
+    Close #file
+    LoadTexture textureID, size, size, VarPtr(texture(0)), True
+End Sub
+
+Private Sub DrawRegionPatch(ByVal east As Double, ByVal north As Double, ByVal airport As Long, ByRef terrain() As Single, ByRef trees() As Single, ByVal textureID As Long)
+    Dim distance As Double, index As Long
+    index = PrimaryRunway(airport)
+    distance = Sqr((east - Runways(index).East) ^ 2 + (north - Runways(index).North) ^ 2)
+    If distance > Visibility + 3800 Then Exit Sub
+    glBindTexture Texture2D, textureID
+    glInterleavedArrays &H2A27, 0, VarPtr(terrain(0))
+    glDrawArrays 4, 0, (UBound(terrain) + 1) \ 5
+    If distance < 6000 Then
+        glBindTexture Texture2D, 3
+        glInterleavedArrays &H2A27, 0, VarPtr(trees(0))
+        glEnable &HBC0: glAlphaFunc &H204, 0.34
+        glDrawArrays 7, 0, (UBound(trees) + 1) \ 5
+        glDisable &HBC0
+    End If
 End Sub

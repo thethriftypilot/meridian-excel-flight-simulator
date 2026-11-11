@@ -62,6 +62,7 @@ Public Sub ResetFlight(ByVal which As Long)
     ElseIf which = 6 Then
         Plane.east = RunwayEast(0, -155): Plane.north = RunwayNorth(0, -155): Plane.altitude = Ground(Plane.east, Plane.north) + 1.2
     End If
+    SetupMission which
     Plane.rpm = 700 + Plane.throttle * 2000
     Plane.oilPressure = 25 + Plane.rpm * 0.019
 End Sub
@@ -125,12 +126,12 @@ Public Sub StepFlight(ByVal dt As Double)
             Touchdown = Abs(Plane.vertical)
             TriggerSound 2, Clamp(Touchdown / 3.2, 0.15, 1)
             If Plane.vertical < -3.2 Or Abs(Plane.bank) > 0.2 Or Plane.pitch < -0.09 Or Plane.pitch > 0.28 Then Plane.crashed = True
-            If Not OnRunway(Plane.east, Plane.north) And Plane.speed > 16 Then Plane.crashed = True
+            If Not OnAnyRunway(Plane.east, Plane.north) And Plane.speed > 16 Then Plane.crashed = True
         End If
         Plane.altitude = floor: Plane.vertical = 0: Plane.grounded = True
     End If
     If HitsAirportBuilding(Plane.east, Plane.north, Plane.altitude) Then Plane.crashed = True
-    If Abs(Plane.east) > 9900 Or Abs(Plane.north) > 9900 Then Paused = True
+    If Abs(Plane.east) > 40000 Or Abs(Plane.north) > 40000 Then Paused = True
 End Sub
 Public Sub DemoControls()
     Dim desiredBank As Double, altitudeError As Double

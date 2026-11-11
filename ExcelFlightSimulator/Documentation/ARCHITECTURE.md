@@ -1,16 +1,20 @@
 # Architecture
 
+## v0.7 update
+
+modRegion loads regional height/map grids and runway CSV. modWorld dispatches terrain queries beyond the old tile. modRegionalScenery draws added runways; modLandscape draws regional and airport meshes, trees, stencil-masked aircraft shadows and a propeller. modMissions owns navigation, physics-tick stage transitions and worksheet logging.
+
 ## Detailed 3D
 
-The default quality preset renders at 1000 � 700 through the Windows OpenGL driver. Detailed 3D / 2x renders at 2000 � 1400 and downsamples to the same cockpit display. VBA chooses visible tiles, sets the camera and weather, and submits textured terrain, tree groups, airport geometry and the aircraft. It reads the finished frame into the existing GDI backbuffer before adding live instruments. A separate Windows surface owns the OpenGL context. Each frame restores the previous context before returning to Excel. A failed initialization returns the flight to the Performance preset.
+The default quality preset renders at 1000 × 700 through the Windows OpenGL driver. Detailed 3D / 2x renders at 2000 × 1400 and downsamples to the same cockpit display. VBA chooses visible tiles, sets the camera and weather, and submits textured terrain, tree groups, airport geometry and the aircraft. It reads the finished frame into the existing GDI backbuffer before adding live instruments. A separate Windows surface owns the OpenGL context. Each frame restores the previous context before returning to Excel. A failed initialization returns the flight to the Performance preset.
 
-The 5.12 km square around KFCI uses a 4096 � 4096 aerial texture (1.25 m per sample). The surrounding area uses the original 5 m aerial imagery. Procedural tree placement follows imagery colours and excludes the runway corridor. Tree positions and building geometry are illustrative. Texture mipmaps and supported anisotropic filtering reduce shimmer at oblique angles.
+The 5.12 km square around KFCI uses a 4096 × 4096 aerial texture (1.25 m per sample). The surrounding area uses the original 5 m aerial imagery. Procedural tree placement follows imagery colours and excludes the runway corridor. Tree positions and building geometry are illustrative. Texture mipmaps and supported anisotropic filtering reduce shimmer at oblique angles.
 
 ## Software renderers
 
 A triangle rasterizer could support arbitrary scenery but would require clipping, triangle setup, depth buffering, and many more VBA pixel operations. GDI-only projected terrain polygons would suffer object/draw-call overhead and visible facets. A voxel-space heightfield gives front-to-back terrain occlusion with one horizon value per column, direct image sampling, and economical distance-dependent ray spacing. The heightfield itself cannot draw caves or overhangs. A small complementary convex-polygon rasterizer now handles runway surfaces, airport structures, and the external aircraft.
 
-`modRender` generates a 480×480 32-bit top-down DIB in a preallocated Long array. Extra area around the visible crop accommodates bank rotation. `StretchDIBits` transfers it to a scene memory DC. `PlgBlt` rolls/scales the image onto a 1000×700 backbuffer. GDI draws the cockpit into the same backbuffer, and one `StretchBlt` presents it to a UserForm. Native graphics performs presentation and basic primitives; VBA decides visibility, geometry, samples, lighting, fog, and every terrain pixel.
+`modRender` generates a 480Ã—480 32-bit top-down DIB in a preallocated Long array. Extra area around the visible crop accommodates bank rotation. `StretchDIBits` transfers it to a scene memory DC. `PlgBlt` rolls/scales the image onto a 1000Ã—700 backbuffer. GDI draws the cockpit into the same backbuffer, and one `StretchBlt` presents it to a UserForm. Native graphics performs presentation and basic primitives; VBA decides visibility, geometry, samples, lighting, fog, and every terrain pixel.
 
 Balanced samples every column. Performance fills pairs of columns and increases depth stepping. The renderer skips near rays that cannot intersect the package's measured maximum elevation. Distance-based texture mipmaps reduce distant aliasing. Directional shading is derived from DEM gradients; fog blends to the weather-dependent horizon. Runway polygons are clipped against a near plane and follow the DEM's longitudinal elevation. Terrain spans also populate an inverse-depth buffer. Near-clipped scenery faces interpolate inverse depth across scanlines and compare each covered pixel against it; the runway receives a small tolerance for coarse DEM z-fighting. This adds inexpensive generalized buildings and a depth-tested aircraft without replacing the efficient terrain renderer.
 
@@ -46,6 +50,6 @@ All declarations are PtrSafe. Handles and pointers use LongPtr; Win32 integers u
 
 32-bit Office is not validated. Do not infer support from PtrSafe declarations alone.
 
-The flight form covers the Excel window without changing its global UI settings. Presentation letterboxes the 1000×700 canvas to preserve gauge shape. Geometry and viewport buffers stay allocated for a session, and the static cockpit has its own cached bitmap.
+The flight form covers the Excel window without changing its global UI settings. Presentation letterboxes the 1000Ã—700 canvas to preserve gauge shape. Geometry and viewport buffers stay allocated for a session, and the static cockpit has its own cached bitmap.
 
 Additional API references: [PlaySoundW](https://learn.microsoft.com/en-us/previous-versions/dd743680(v=vs.85)), [GetProcessMemoryInfo](https://learn.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-getprocessmemoryinfo), [PROCESS_MEMORY_COUNTERS](https://learn.microsoft.com/en-us/windows/win32/api/psapi/ns-psapi-process_memory_counters). The memory-counter structure uses DWORD fields followed by SIZE_T/LongPtr fields (72 bytes on x64); the native memory check is included in the self-tests.

@@ -1,5 +1,9 @@
 # Sources and asset rights
 
+## v0.7 update
+
+Assets/Region/sources.json retains USGS elevation/NAIP URLs and patch metadata. Assets/Airports/region-runways.json retains the FAA response, projected into Assets/Region/runways.csv. Imagery dates vary by mosaic; runway effective dates do not imply imagery recency. Existing source attribution below applies.
+
 Downloaded 2026-11-08. Original service responses, export URLs, coordinate metadata, and checksums are retained in `Assets/Terrain`.
 
 ## Geographic assets

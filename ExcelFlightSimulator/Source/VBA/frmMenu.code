@@ -10,6 +10,14 @@ Private Sub UserForm_Initialize()
         .AddItem "Night flight"
         .AddItem "Apron / taxi"
         .AddItem "Landing challenge / Crosswind"
+        .AddItem "KRIC / Richmond departure"
+        .AddItem "KOFP / Hanover departure"
+        .AddItem "Mission / KFCI to Richmond"
+        .AddItem "Mission / Richmond to Hanover"
+        .AddItem "Mission / Hanover to KFCI"
+        .AddItem "Mission / Three-airport tour"
+        .AddItem "KRIC / Runway 16 approach"
+        .AddItem "KOFP / Runway 16 approach"
         .ListIndex = 1
     End With
     With cboWeather

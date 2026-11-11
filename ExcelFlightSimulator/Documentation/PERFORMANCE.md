@@ -1,5 +1,9 @@
 # v0.6 graphics measurements
 
+## v0.7 update
+
+117 native Excel checks passed, including both new airports, guided arrivals and braking, all three routes using real physics, the former boundary crossing, mission pause/replay/wrong-airport handling, tour progression and logging. A separate 120-second Detailed 3D soak starting at KRIC cycled cameras and weather: 4,497 frames, 37.47 FPS mean, P95 below 32 ms, worst 44.7 ms. Peak working set was 420.6 MB (initial 413.5); peak GDI 368 (initial 367). Results are development-PC measurements. Sustained physical piloting and independent instrument calibration remain partial. Matched approach checks measured 43.85 FPS Detailed and 27.21 FPS Detailed / 2x. Earlier measurements below are historical.
+
 Measured in 64-bit desktop Excel on the development PC, with an NVIDIA GeForce GTX 1080 and its Windows OpenGL driver. Other applications were open.
 
 | Matched 90-frame final approach | Uncapped FPS |

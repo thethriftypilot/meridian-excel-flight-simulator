@@ -94,6 +94,8 @@ Public Sub FinishRecording()
     If Not Recording Then Exit Sub
     RecordFrame True: Recording = False
     If Not ChallengeActive Then ReviewStatus = "Free flight / unscored"
+    If Len(MissionSummary()) > 0 Then ReviewStatus = MissionSummary()
+    WriteMissionLog
     If Assisted Then ReviewStatus = ReviewStatus & " (assisted / no personal best)"
 End Sub
 Public Function ReplayDuration() As Double

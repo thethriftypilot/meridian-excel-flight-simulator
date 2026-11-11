@@ -1,14 +1,15 @@
-param([ValidateRange(10,7200)][double]$Seconds=1200,[switch]$Detailed,[switch]$Supersample)
+param([ValidateRange(10,7200)][double]$Seconds=1200,[switch]$Detailed,[switch]$Supersample,[int]$Scenario=1)
 $ErrorActionPreference='Stop'
 $root=(Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 $resultPath = if ($Supersample) { "Tests/graphics-2x-soak-result.txt" } elseif ($Detailed) { 'Tests/graphics-soak-result.txt' } else { 'Tests/soak-result.txt' }
+if ($Scenario -ne 1) { $resultPath = $resultPath.Replace("Tests/", "Tests/region-$Scenario-") }
 Set-Content -LiteralPath (Join-Path $root $resultPath) -Value "RUNNING | Requested $Seconds seconds; completion is not yet verified."
 $excel=New-Object -ComObject Excel.Application
 $excel.Visible=$true
 $book=$null
 try {
     $book=$excel.Workbooks.Open((Join-Path $root 'ExcelFlightSimulator.xlsm'))
-    $result=$excel.Run("'ExcelFlightSimulator.xlsm'!RunSoak",$Seconds,$Detailed.IsPresent,$Supersample.IsPresent)
+    $result=$excel.Run("'ExcelFlightSimulator.xlsm'!RunSoak",$Seconds,$Detailed.IsPresent,$Supersample.IsPresent,$Scenario)
     Write-Output $result
     if ($result -notmatch '^PASS') { throw 'Native soak did not pass. See the soak result in Tests.' }
 } finally {

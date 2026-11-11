@@ -1,0 +1,47 @@
+{
+  "region_half_extent_m": 40960,
+  "regional_dem_step_m": 80,
+  "regional_imagery_step_m": 20,
+  "airport_dem_step_m": 20,
+  "airport_imagery_step_m": 2.5,
+  "runways": [
+    {
+      "airport": 1,
+      "designator": "16/34",
+      "east": 18534.158129687967,
+      "north": 11108.480628824664,
+      "heading": 2.5756439423308293,
+      "length": 2744.1144,
+      "width": 45.72
+    },
+    {
+      "airport": 1,
+      "designator": "02/20",
+      "east": 17492.88691012138,
+      "north": 11273.5558234393,
+      "heading": 0.23401299498888653,
+      "length": 2013.8136000000002,
+      "width": 45.72
+    },
+    {
+      "airport": 2,
+      "designator": "16/34",
+      "east": 7798.560893175479,
+      "north": 33736.3953124342,
+      "heading": 2.6145481737321945,
+      "length": 1646.5296,
+      "width": 30.48
+    }
+  ],
+  "urls": [
+    "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/exportImage?f=json&bbox=-8681589.420888754%2C4444355.677766042%2C-8578460.52010396%2C4547484.578550836&bboxSR=3857&imageSR=3857&size=1024%2C1024&interpolation=RSP_BilinearInterpolation&format=tiff&pixelType=F32&renderingRule=%7B%22rasterFunction%22%3A%22None%22%7D",
+    "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer/exportImage?f=json&bbox=-8681589.420888754%2C4495920.128158439%2C-8630024.970496356%2C4547484.578550836&bboxSR=3857&imageSR=3857&size=2048%2C2048&interpolation=RSP_BilinearInterpolation&format=jpg&bandIds=0%2C1%2C2",
+    "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer/exportImage?f=json&bbox=-8630024.970496356%2C4495920.128158439%2C-8578460.52010396%2C4547484.578550836&bboxSR=3857&imageSR=3857&size=2048%2C2048&interpolation=RSP_BilinearInterpolation&format=jpg&bandIds=0%2C1%2C2",
+    "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer/exportImage?f=json&bbox=-8681589.420888754%2C4444355.677766042%2C-8630024.970496356%2C4495920.128158439&bboxSR=3857&imageSR=3857&size=2048%2C2048&interpolation=RSP_BilinearInterpolation&format=jpg&bandIds=0%2C1%2C2",
+    "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer/exportImage?f=json&bbox=-8630024.970496356%2C4444355.677766042%2C-8578460.52010396%2C4495920.128158439&bboxSR=3857&imageSR=3857&size=2048%2C2048&interpolation=RSP_BilinearInterpolation&format=jpg&bandIds=0%2C1%2C2",
+    "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/exportImage?f=json&bbox=-8609915.139333304%2C4506681.790885866%2C-8603469.583034255%2C4513127.347184915&bboxSR=3857&imageSR=3857&size=256%2C256&interpolation=RSP_BilinearInterpolation&format=tiff&pixelType=F32&renderingRule=%7B%22rasterFunction%22%3A%22None%22%7D",
+    "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer/exportImage?f=json&bbox=-8609915.139333304%2C4506681.790885866%2C-8603469.583034255%2C4513127.347184915&bboxSR=3857&imageSR=3857&size=2048%2C2048&interpolation=RSP_BilinearInterpolation&format=jpg&bandIds=0%2C1%2C2",
+    "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/exportImage?f=json&bbox=-8623430.15815984%2C4535168.020968541%2C-8616984.601860791%2C4541613.57726759&bboxSR=3857&imageSR=3857&size=256%2C256&interpolation=RSP_BilinearInterpolation&format=tiff&pixelType=F32&renderingRule=%7B%22rasterFunction%22%3A%22None%22%7D",
+    "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer/exportImage?f=json&bbox=-8623430.15815984%2C4535168.020968541%2C-8616984.601860791%2C4541613.57726759&bboxSR=3857&imageSR=3857&size=2048%2C2048&interpolation=RSP_BilinearInterpolation&format=jpg&bandIds=0%2C1%2C2"
+  ]
+}

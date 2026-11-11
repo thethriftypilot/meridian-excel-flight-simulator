@@ -62,7 +62,7 @@ try {
     [void](Add-Control 'CommandButton' 'btnDemo' 'WATCH DEMONSTRATION' 360 414 350 48 16 15198183 4274474)
     [void](Add-Control 'CommandButton' 'btnReplay' 'REPLAY LAST FLIGHT' 30 474 310 38 13 15198183 4274474)
     [void](Add-Control 'CommandButton' 'btnDebrief' 'VIEW DEBRIEF' 360 474 350 38 13 15198183 4274474)
-    [void](Add-Control 'Label' 'lblHint' 'v0.4 / Arrow keys fly / W S power / P pause / Esc menu. Experimental simulation.' 30 535 690 22 10 11908508)
+    [void](Add-Control 'Label' 'lblHint' 'v0.7 / N destination / M map / Arrows fly / W S power / P pause / Esc menu.' 30 535 690 22 10 11908508)
     [void](Add-Control 'CommandButton' 'btnClose' 'EXIT' 660 18 60 26 10 15198183 4274474)
     $menuCode=[IO.File]::ReadAllText((Join-Path $root 'Source/VBA/frmMenu.code'))
     $menuCode=$menuCode.Replace('Private Sub UserForm_Initialize()',"Private Sub UserForm_Initialize()`r`n$script:fontCode")
@@ -85,7 +85,7 @@ try {
         $book.Save()
         if ($result -match '(?m)^FAIL') { throw 'Native tests failed. Inspect Tests/results.txt before distributing this build.' }
         # Test-flight reports are retained as PDF evidence, not shipped as the user's history.
-        foreach ($name in @('Debrief','Flight data','Personal bests')) {
+        foreach ($name in @('Debrief','Flight data','Personal bests','Mission log')) {
             $book.Worksheets.Item($name).Delete()
         }
         $book.Worksheets.Item('Launch').Activate()

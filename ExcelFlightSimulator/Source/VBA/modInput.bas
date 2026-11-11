@@ -36,6 +36,7 @@ Public Sub ApplyInput(ByVal dt As Double)
     If Pressed(27) Then Running = False
     If Pressed(80) Then Paused = Not Paused
     If Pressed(67) Then CameraMode = (CameraMode + 1) Mod 5
+    If Pressed(78) Then CycleDestination
     If Pressed(77) Then ShowMap = Not ShowMap
     If Pressed(86) Then Muted = Not Muted
     If ReplayActive Then

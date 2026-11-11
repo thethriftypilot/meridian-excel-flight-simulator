@@ -1,5 +1,9 @@
 # MERIDIAN — the Excel flight experiment
 
+## v0.7 update
+
+Version 0.7 expands the world to an 81.92 km square, adding Richmond International (KRIC) and Hanover County (KOFP) to Richmond Executive (KFCI). It includes three connecting missions, a three-leg tour, destination navigation, a regional map, actual-airframe ground shadows and propeller animation. See [EXPLORATION.md](EXPLORATION.md) for flight and mission instructions.
+
 An experimental, native VBA flight simulator for 64-bit Windows desktop Excel. The aircraft is inspired by a 1978 Piper PA-28-161 Warrior II. This is entertainment software, not a training device or navigation source.
 
 ## Fly

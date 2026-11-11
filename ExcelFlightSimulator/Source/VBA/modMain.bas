@@ -60,6 +60,7 @@ Public Sub BeginFlight(ByVal automatic As Boolean)
                 If Demo Then DemoControls
                 StepFlight 1# / 60
                 UpdateChallenge 1# / 60
+                UpdateMission 1# / 60
                 RecordFrame
                 If ChallengeComplete Then Paused = True
                 accumulator = accumulator - 1# / 60

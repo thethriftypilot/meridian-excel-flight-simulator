@@ -17,3 +17,10 @@ ExcelFlightSimulator/Assets/Landscape/*.f32
 ExcelFlightSimulator/Assets/Landscape/*.rgba
 ExcelFlightSimulator/Assets/Landscape/*.i32
 ExcelFlightSimulator/Assets/Terrain/airport-detail-*.jpg.json
+
+# Generated regional terrain and textures ship in the complete release archive.
+ExcelFlightSimulator/Assets/Region/*.f32
+ExcelFlightSimulator/Assets/Region/*.rgba
+ExcelFlightSimulator/Assets/Region/*.rgb
+ExcelFlightSimulator/Assets/Region/*.tif
+ExcelFlightSimulator/Assets/Region/*.jpg

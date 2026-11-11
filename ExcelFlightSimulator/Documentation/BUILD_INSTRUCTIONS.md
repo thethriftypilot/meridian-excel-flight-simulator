@@ -1,5 +1,9 @@
 # Build and reproduce
 
+## v0.7 update
+
+After preparing original terrain and v0.6 landscape assets, run `python Tools/TerrainProcessing/build_region.py` from the simulator folder with NumPy, Pillow and SciPy installed. It fetches USGS/FAA data and builds Assets/Region. Release ZIPs include the binaries. Run `Tools/Build/build.ps1 -Test`, then `Tools/Build/run-soak.ps1 -Seconds 120 -Detailed -Scenario 14` for regional verification.
+
 The packaged workbook is the normal entry point. Rebuilding is optional.
 
 ## Workbook build
@@ -34,10 +38,10 @@ All arrays are row-major, top row north, left column west, little-endian, with n
 
 | File | Layout |
 |---|---|
-| height.bin | 1024×1024 IEEE754 float32 metres NAVD88 |
-| color.bin | 4096×4096 uint32 0x00RRGGBB (disk bytes B,G,R,0) |
-| color-lod1.bin | 1024×1024 uint32 box-filtered color |
-| color-lod2.bin | 256×256 uint32 box-filtered color |
+| height.bin | 1024Ã—1024 IEEE754 float32 metres NAVD88 |
+| color.bin | 4096Ã—4096 uint32 0x00RRGGBB (disk bytes B,G,R,0) |
+| color-lod1.bin | 1024Ã—1024 uint32 box-filtered color |
+| color-lod2.bin | 256Ã—256 uint32 box-filtered color |
 
 No ellipsoid/geoid conversion is applied. Aircraft MSL and terrain altitude share the local orthometric reference. Do not mix GPS ellipsoidal heights into this data without conversion.
 
@@ -69,4 +73,4 @@ This opens an isolated Excel instance, runs the real renderer/audio/60 Hz physic
 After a successful continuous diagnostic, `python .\Tools\Build\plot_soak.py` creates Tests/soak-performance.svg from the raw measurements. `python .\Tools\Build\package.py` generates PACKAGE_SHA256.json and the complete ZIP, then checks every archive entry CRC.
 
 
-The v0.6 ZIP includes the ready-to-use Detailed 3D assets. To regenerate them from source, prepare the original terrain first, then run `build_landscape.py`, `build_airframe.py` and `build_windshield.py` in `Tools/TerrainProcessing` with Python, NumPy, Pillow and SciPy installed. The landscape builder fetches four USGS NAIP tiles and retains their source URLs in `Assets/Landscape/source.json`. Use `Tools/Build/run-soak.ps1 -Seconds 120 -Detailed` to repeat the graphics stress test, or replace `-Detailed` with `-Supersample` to test the 2� mode.
+The v0.6 ZIP includes the ready-to-use Detailed 3D assets. To regenerate them from source, prepare the original terrain first, then run `build_landscape.py`, `build_airframe.py` and `build_windshield.py` in `Tools/TerrainProcessing` with Python, NumPy, Pillow and SciPy installed. The landscape builder fetches four USGS NAIP tiles and retains their source URLs in `Assets/Landscape/source.json`. Use `Tools/Build/run-soak.ps1 -Seconds 120 -Detailed` to repeat the graphics stress test, or replace `-Detailed` with `-Supersample` to test the 2× mode.

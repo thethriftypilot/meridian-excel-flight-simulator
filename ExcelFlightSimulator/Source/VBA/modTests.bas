@@ -230,6 +230,7 @@ Public Function RunSelfTests() As String
             ResetFlight 1: SetWeather 1: CameraMode = 2
             Call RenderFrame: SaveFrame ThisWorkbook.Path & "\Tests\supersampled-v06.bmp"
             Quality = 1
+            results = results & RunRegionTests()
             SetWeather 0: Call StartAudio: t = Clock()
             Do While Clock() - t < 2
                 Plane.throttle = (Clock() - t) / 2: Plane.rpm = 700 + Plane.throttle * 2000

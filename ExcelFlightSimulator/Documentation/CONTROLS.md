@@ -1,5 +1,9 @@
 # Controls
 
+## v0.7 update
+
+N cycles destination in free flight; missions lock it. M shows a map fitted to aircraft and destination.
+
 v0.4 adds **REPLAY LAST FLIGHT** and **VIEW DEBRIEF** to the menu. In replay, **J/L** seek five seconds, **K** cycles speed, **P** pauses, **R** restarts and **C** changes camera. Flight controls are ignored. [Challenges and replay](CHALLENGES.md).
 
 | Key | Action |

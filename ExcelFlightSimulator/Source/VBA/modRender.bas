@@ -114,6 +114,8 @@ Public Sub RenderFrame(Optional ByVal menu As Boolean = False)
         SceneryPixels = 0
         Airport
         DrawAirportObjects
+        DrawRegionalAirports
+        DrawAircraftShadow
         If CameraMode = 2 Then DrawDetailedAircraft
         FinishLandscape
     Else
@@ -121,6 +123,7 @@ Public Sub RenderFrame(Optional ByVal menu As Boolean = False)
         SceneryPixels = 0
         Airport
         DrawAirportObjects
+        DrawRegionalAirports
         If CameraMode = 2 Then DrawChaseAircraft
         StretchDIBits sceneDC, 0, 0, 480, 480, 0, 0, 480, 480, pixels(0), bmi, 0, SRCCOPY
         Box Canvas, 0, 0, 1000, 700, RGB(115, 149, 163)
@@ -148,6 +151,7 @@ Public Sub RenderFrame(Optional ByVal menu As Boolean = False)
             DrawText Canvas, 300, 180, IIf(ReplayActive, "REPLAY PAUSED", "FLIGHT PAUSED"), 2
             DrawText Canvas, 300, 239, IIf(ReplayActive, "P play  |  J/L seek  |  R restart  |  Esc menu", "P resume  |  R reset  |  Esc menu")
         End If
+        DrawNavigation
         DrawReviewHUD
         If Plane.crashed Then
             Box Canvas, 270, 165, 460, 115, RGB(52, 25, 26)
@@ -163,6 +167,7 @@ Private Sub RenderTerrain()
     Dim z As Double, dz As Double, ex As Double, ny As Double, dx As Double, dn As Double
     Dim ix As Long, iy As Long, tx As Long, ty As Long, h As Double, horizon As Double, projectionScale As Double
     Dim r As Long, g As Long, b As Long, fog As Double, light As Double, skyR As Long, skyG As Long, skyB As Long
+    Dim regional As Boolean
     Dim stride As Long, xx As Long, rowColor As Long, u As Double, shade As Double
     skyR = 174: skyG = 196: skyB = 205
     If Weather = 1 Then skyR = 234: skyG = 169: skyB = 126
@@ -183,18 +188,28 @@ Private Sub RenderTerrain()
         dx = ch * z / 300: dn = -sh * z / 300
         fog = Clamp(z / Visibility, 0, 1): fog = fog * fog
         For x = 0 To 479 Step stride
-            ix = Int((ex + HalfWorld) / 20): iy = Int((HalfWorld - ny) / 20)
+            regional = Abs(ex) >= HalfWorld Or Abs(ny) >= HalfWorld
+            If regional Then
+                ix = Int((ex + 40960) / 80): iy = Int((40960 - ny) / 80)
+            Else
+                ix = Int((ex + HalfWorld) / 20): iy = Int((HalfWorld - ny) / 20)
+            End If
             If ix >= 0 And ix < 1024 And iy >= 0 And iy < 1024 Then
-                index = ix + iy * 1024: h = Heights(index)
+                index = ix + iy * 1024
+                If regional Then h = RegionElevation(ex, ny) Else h = Heights(index)
                 py = horizon - (h - camAlt) * projectionScale
                 oldY = ceiling(x)
                 If py < oldY Then
-                    tx = Int((ex + HalfWorld) / 5): ty = Int((HalfWorld - ny) / 5)
-                    c = Colors(tx + ty * 4096)
-                    If z > 1500 Then c = ColorLOD1(ix + iy * 1024)
-                    If z > 4500 Then c = ColorLOD2((ix \ 4) + (iy \ 4) * 256)
-                    shade = TerrainShade(index)
-                    If Weather = 1 Then shade = SunsetShade(index)
+                    If regional Then
+                        c = RegionMap(index): shade = 1
+                    Else
+                        tx = Int((ex + HalfWorld) / 5): ty = Int((HalfWorld - ny) / 5)
+                        c = Colors(tx + ty * 4096)
+                        If z > 1500 Then c = ColorLOD1(ix + iy * 1024)
+                        If z > 4500 Then c = ColorLOD2((ix \ 4) + (iy \ 4) * 256)
+                        shade = TerrainShade(index)
+                        If Weather = 1 Then shade = SunsetShade(index)
+                    End If
                     light = shade
                     If Weather = 1 Then light = light * 0.75
                     If Weather = 4 Then light = light * 0.13
@@ -371,7 +386,7 @@ Public Sub Present()
 End Sub
 Private Sub DrawHUD()
     Box Canvas, 0, 0, 1000, 34, RGB(13, 26, 32)
-    DrawText Canvas, 16, 8, "MERIDIAN / KFCI", 0, RGB(106, 211, 197)
+    DrawText Canvas, 16, 8, "MERIDIAN", 0, RGB(106, 211, 197)
     DrawText Canvas, 230, 8, Format(Plane.speed * 1.94384, "0") & " KT   " & Format(Plane.altitude * 3.28084, "0") & " FT   " & Format(Wrap(Plane.heading) * 180 / PI, "000") & " TRUE"
     DrawText Canvas, 690, 8, Format(FPS, "0.0") & " FPS  |  " & IIf(Demo, "DEMONSTRATION", "MANUAL FLIGHT")
     Box Canvas, 414, 34, 172, 24, RGB(15, 28, 34)
@@ -506,7 +521,7 @@ Private Sub DrawPanel()
     DrawText Canvas, 653, 498, "FUEL " & Format(Plane.fuel / 3.78541, "0.0") & " GAL   POWER " & Format(Plane.throttle, "0%")
     DrawText Canvas, 653, 526, "FLAP " & Choose(Plane.flaps + 1, "0", "10", "25", "40") & "   TRIM " & Format(Plane.trim, "+0.00;-0.00;0.00")
     DrawText Canvas, 653, 554, "OIL " & Format(Plane.oilTemp, "0") & " C / " & Format(Plane.oilPressure, "0") & " PSI"
-    DrawText Canvas, 653, 582, "GS " & Format(GroundSpeedKnots(), "0") & " KT  KFCI " & Format(Sqr(Plane.east ^ 2 + Plane.north ^ 2) / 1852, "0.0") & " NM"
+    DrawText Canvas, 653, 582, "GS " & Format(GroundSpeedKnots(), "0") & " KT  " & AirportCode(NavAirport) & " " & Format(AirportDistance(NavAirport) / 1852, "0.0") & " NM"
     DrawText Canvas, 653, 619, IIf(Plane.grounded, "ON GROUND", "AIRBORNE") & "   " & IIf(Plane.brake, "BRAKE", ""), 0, RGB(214, 178, 104)
     If CameraMode = 4 Then
         If instrumentDC = 0 Then
@@ -528,28 +543,50 @@ Private Sub DrawPanel()
     End If
 End Sub
 Private Sub DrawMap()
-    Dim x As Long, y As Long, ix As Long, iy As Long, c As Long, px As Long, py As Long
+    Dim x As Long, y As Long, ix As Long, iy As Long, airport As Long, runway As Long
+    Dim mapScale As Double, centerE As Double, centerN As Double, east As Double, north As Double
+    Dim px As Long, py As Long, targetX As Long, targetY As Long
     Static mapPixels(0 To 1599) As Long
     Dim mapInfo As BITMAPINFOHEADER
+    runway = PrimaryRunway(NavAirport)
+    mapScale = Clamp(AirportDistance(NavAirport) / 120, 40, 650)
+    centerE = (Plane.east + Runways(runway).East) / 2
+    centerN = (Plane.north + Runways(runway).North) / 2
     Box Canvas, 795, 48, 195, 195, RGB(9, 20, 26)
     For y = 0 To 39
         For x = 0 To 39
-            ix = Clamp((Plane.east + (x * 4 - 80) * 40 + HalfWorld) / 20, 0, 1023)
-            iy = Clamp((HalfWorld - Plane.north + (y * 4 - 80) * 40) / 20, 0, 1023)
-            mapPixels(x + y * 40) = ColorLOD1(ix + iy * 1024)
+            east = centerE + (x * 4 - 80) * mapScale
+            north = centerN - (y * 4 - 80) * mapScale
+            If Abs(east) < HalfWorld And Abs(north) < HalfWorld Then
+                ix = Clamp((east + HalfWorld) / 20, 0, 1023)
+                iy = Clamp((HalfWorld - north) / 20, 0, 1023)
+                mapPixels(x + y * 40) = ColorLOD1(ix + iy * 1024)
+            Else
+                ix = Clamp((east + 40960) / 80, 0, 1023)
+                iy = Clamp((40960 - north) / 80, 0, 1023)
+                mapPixels(x + y * 40) = RegionMap(ix + iy * 1024)
+            End If
         Next
     Next
     mapInfo.biSize = 40: mapInfo.biWidth = 40: mapInfo.biHeight = -40
     mapInfo.biPlanes = 1: mapInfo.biBitCount = 32
     StretchDIBits Canvas, 813, 67, 160, 160, 0, 0, 40, 40, mapPixels(0), mapInfo, 0, SRCCOPY
-    px = 893 - Plane.east / 40: py = 147 + Plane.north / 40
-    If px > 835 And px < 951 And py > 89 And py < 205 Then
-        DrawLine Canvas, px - Sin(RunwayHeading) * 21, py + Cos(RunwayHeading) * 21, px + Sin(RunwayHeading) * 21, py - Cos(RunwayHeading) * 21, RGB(255, 210, 75), 2
-    End If
-    If px > 813 And px < 973 And py > 67 And py < 227 Then Disk Canvas, px, py, 3, RGB(255, 210, 75)
-    DrawLine Canvas, 893, 147, 893 + Sin(Plane.heading) * 18, 147 - Cos(Plane.heading) * 18, RGB(255, 245, 222), 3
-    Disk Canvas, 893, 147, 3, RGB(255, 80, 50)
-    DrawText Canvas, 810, 228, "N UP    6.4 KM", 3
+    px = 893 + (Plane.east - centerE) / mapScale: py = 147 - (Plane.north - centerN) / mapScale
+    targetX = 893 + (Runways(runway).East - centerE) / mapScale
+    targetY = 147 - (Runways(runway).North - centerN) / mapScale
+    DrawLine Canvas, px, py, targetX, targetY, RGB(107, 237, 219), 1
+    For airport = 0 To 2
+        runway = PrimaryRunway(airport)
+        x = 893 + (Runways(runway).East - centerE) / mapScale
+        y = 147 - (Runways(runway).North - centerN) / mapScale
+        If x > 819 And x < 964 And y > 73 And y < 209 Then
+            Disk Canvas, x, y, 3, RGB(255, 210, 75)
+            DrawText Canvas, Clamp(x - 12, 816, 941), y + 4, AirportCode(airport), 3, RGB(255, 236, 181)
+        End If
+    Next
+    DrawLine Canvas, px, py, px + Sin(Plane.heading) * 12, py - Cos(Plane.heading) * 12, RGB(255, 245, 222), 3
+    Disk Canvas, px, py, 3, RGB(255, 80, 50)
+    DrawText Canvas, 810, 228, "N UP  " & Format(mapScale * 160 / 1000, "0") & " KM  / N DEST", 3
 End Sub
 
 Public Sub WorldFace(ByRef east() As Double, ByRef north() As Double, ByRef height() As Double, ByVal color As Long)
