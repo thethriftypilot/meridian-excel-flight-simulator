@@ -25,3 +25,8 @@ The repository README now links back to the published website. This website-only
 ## November 10, 2026 — v0.4
 
 Published the v0.4 release link, replay screenshot, Excel debrief and scoring guide. All three images loaded on the live page. Desktop content measured 2101 px in a 2250 px embed. Wix mobile preview measured 3941 px in a 4300 px embed at 320 px width. See meridian-v04-live.png.
+
+## v0.7 publication
+
+Published regional missions, three airports, new native screenshots, v0.7 download and 117-check evidence. Live desktop content measures 2233 px within the 2350 px embed; mobile preview content measures 4073 px within 4500 px at 320 px width. All three images loaded with no horizontal overflow. Retained meridian-v07-live.jpg records the published page.
+
