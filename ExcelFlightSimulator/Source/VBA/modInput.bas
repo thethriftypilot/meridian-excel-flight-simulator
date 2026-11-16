@@ -5,11 +5,12 @@ Private queuedKeys(0 To 255) As Boolean, eventHeld(0 To 255) As Boolean
 Private pulseUntil(0 To 255) As Double
 Public Sub QueueKey(ByVal key As Long, ByVal down As Boolean)
     If key < 0 Or key > 255 Then Exit Sub
-    If down And Not eventHeld(key) Then
+    If down And Not eventHeld(key) And Not lastKeys(key) Then
         queuedKeys(key) = True
         pulseUntil(key) = Clock() + 0.1
     End If
     eventHeld(key) = down
+    lastKeys(key) = down
 End Sub
 Public Function KeyDown(ByVal key As Long) As Boolean
     KeyDown = GetAsyncKeyState(key) < 0 Or Clock() < pulseUntil(key)
@@ -19,22 +20,34 @@ Private Function Pressed(ByVal key As Long) As Boolean
     queuedKeys(key) = False
 End Function
 Public Sub ClearInput()
+    Dim key As Long
     Erase lastKeys
     Erase queuedKeys: Erase eventHeld
     Erase pulseUntil
+    For key = 0 To 255: lastKeys(key) = GetAsyncKeyState(key) < 0: Next
 End Sub
 Public Sub PollInput(ByVal dt As Double)
-    Dim e As Double, a As Double, r As Double
+    Dim e As Double, a As Double, r As Double, key As Long, down As Boolean
     If GetForegroundWindow() <> SimHwnd Then
         Plane.elevator = 0: Plane.aileron = 0: Plane.rudder = 0: Plane.brake = False
+        ClearInput
         Exit Sub
     End If
+    For key = 0 To 255
+        down = GetAsyncKeyState(key) < 0
+        If down And Not lastKeys(key) Then queuedKeys(key) = True
+        lastKeys(key) = down
+    Next
     ApplyInput dt
 End Sub
 Public Sub ApplyInput(ByVal dt As Double)
     Dim e As Double, a As Double, r As Double
     If Pressed(27) Then Running = False
     If Pressed(80) Then Paused = Not Paused
+    If Pressed(72) Then CleanView = Not CleanView
+    If ViewZoom = 0 Then ViewZoom = 1
+    If Pressed(187) Then ViewZoom = Clamp(ViewZoom + 0.1, 0.65, 1.6)
+    If Pressed(189) Then ViewZoom = Clamp(ViewZoom - 0.1, 0.65, 1.6)
     If Pressed(67) Then CameraMode = (CameraMode + 1) Mod 5
     If Pressed(78) Then CycleDestination
     If Pressed(77) Then ShowMap = Not ShowMap

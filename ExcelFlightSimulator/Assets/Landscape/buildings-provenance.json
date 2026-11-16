@@ -1,0 +1,12 @@
+{
+  "buildings": 35263,
+  "skipped": 3094,
+  "tagged_heights": 14,
+  "triangles": 696551,
+  "source_sha256": "a0eeac7c7cde7aea026f4802251fb6cb2ef1764b2c0041add2ed3a79b45b89f5",
+  "source_timestamp": "2026-11-16T19:27:10Z",
+  "attribution": "\u00a9 OpenStreetMap contributors",
+  "license": "ODbL 1.0",
+  "source": "https://www.openstreetmap.org/copyright",
+  "limitations": "Ways only; no relations/courtyards. Roofs and materials estimated; most heights estimated. No building collisions."
+}

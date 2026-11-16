@@ -1,0 +1,1 @@
+PASS | Direct GPU | 3 launches, 105 camera/weather frames, resize, pause, capture and double cleanup; GDI 347 -> 347 cycle 1=347 cycle 2=347 cycle 3=347

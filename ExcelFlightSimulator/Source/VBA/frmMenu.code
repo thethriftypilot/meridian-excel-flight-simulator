@@ -30,7 +30,7 @@ Private Sub UserForm_Initialize()
         .AddItem "Rain / reduced visibility"
         .ListIndex = 0
     End With
-    cboQuality.AddItem "Performance": cboQuality.AddItem "Balanced": cboQuality.AddItem "Detailed 3D": cboQuality.AddItem "Detailed 3D / 2x": cboQuality.ListIndex = 2
+    cboQuality.AddItem "Performance": cboQuality.AddItem "Balanced": cboQuality.AddItem "Detailed 3D": cboQuality.AddItem "Detailed 3D / 2x": cboQuality.AddItem "Extreme GPU": cboQuality.ListIndex = 4
     cboVolume.AddItem "Muted": cboVolume.AddItem "Low": cboVolume.AddItem "Normal": cboVolume.ListIndex = 2
     cboSensitivity.AddItem "Gentle": cboSensitivity.AddItem "Normal": cboSensitivity.AddItem "Direct": cboSensitivity.ListIndex = 1
 End Sub
@@ -46,6 +46,7 @@ Private Sub ConfigureFlight()
     If Scenario = 5 Then SetWeather 4
     If Scenario = 7 Then SetWeather 2
     Quality = cboQuality.ListIndex
+    CacheGeometry = (Quality >= 2): CleanView = (Quality = 4): ViewZoom = 1
     Volume = cboVolume.ListIndex * 0.325
     Muted = (Volume = 0)
     Sensitivity = 0.5 + cboSensitivity.ListIndex * 0.3

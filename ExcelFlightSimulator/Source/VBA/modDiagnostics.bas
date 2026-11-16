@@ -21,16 +21,17 @@ Public Function WorkingSetMB() As Double
 End Function
 'Native continuous renderer/audio soak, deliberately independent of desktop focus.
 'This is a diagnostic harness, not a claim that physical controls were exercised.
-Public Function RunSoak(Optional ByVal seconds As Double = 1200, Optional ByVal detailed As Boolean = False, Optional ByVal supersample As Boolean = False, Optional ByVal startScenario As Long = 1) As String
+Public Function RunSoak(Optional ByVal seconds As Double = 1200, Optional ByVal detailed As Boolean = False, Optional ByVal supersample As Boolean = False, Optional ByVal startScenario As Long = 1, Optional ByVal direct As Boolean = False) As String
     Dim start As Double, previous As Double, current As Double, accumulator As Double, frameStart As Double
     Dim frames As Long, f As Integer, nextLog As Double, initialGDI As Long, peakGDI As Long, currentGDI As Long
     Dim initialMB As Double, peakMB As Double, memory As Double, errText As String, opened As Boolean
     Dim prefix As String, renderStart As Double, renderMS As Double, fastestBudget As Double
-    Dim buckets(0 To 1000) As Long, bucket As Long, cumulative As Long, p95 As Long, worst As Double
+    Dim buckets(0 To 1000) As Long, bucket As Long, cumulative As Long, p95 As Long, p99 As Long, worst As Double
     prefix = "soak": fastestBudget = 0.033
-    If supersample Then detailed = True
+    If supersample Or direct Then detailed = True
     If detailed Then prefix = "graphics-soak": fastestBudget = 1# / 60
     If supersample Then prefix = "graphics-2x-soak"
+    If direct Then prefix = "extreme-soak"
     If startScenario <> 1 Then prefix = "region-" & startScenario & "-" & prefix
     On Error GoTo failed
     errText = "load world": LoadWorld
@@ -38,6 +39,8 @@ Public Function RunSoak(Optional ByVal seconds As Double = 1200, Optional ByVal 
     Quality = 0: Volume = 0.2: Muted = False: Paused = False: Demo = True
     If detailed Then Quality = 2
     If supersample Then Quality = 3
+    If direct Then Quality = 4
+    CacheGeometry = direct: CleanView = direct: ViewZoom = 1
     StartRecording
     errText = "show form": frmFlight.Show vbModeless: DoEvents
     errText = "renderer init": InitRenderer FindWindow(vbNullString, "Meridian | Excel Flight Simulator")
@@ -89,9 +92,10 @@ Public Function RunSoak(Optional ByVal seconds As Double = 1200, Optional ByVal 
     RunSoak = RunSoak & "; recorded samples " & SampleCount
     For bucket = 0 To 1000
         cumulative = cumulative + buckets(bucket)
-        If cumulative >= frames * 0.95 Then p95 = bucket + 1: Exit For
+        If p95 = 0 And cumulative >= frames * 0.95 Then p95 = bucket + 1
+        If cumulative >= frames * 0.99 Then p99 = bucket + 1: Exit For
     Next
-    RunSoak = RunSoak & "; render/audio/present P95 below " & p95 & " ms; worst " & Format(worst, "0.0") & " ms"
+    RunSoak = RunSoak & "; render/audio/present P95 below " & p95 & " ms; P99 below " & p99 & " ms; worst " & Format(worst, "0.0") & " ms"
     SaveFrame ThisWorkbook.Path & "\Tests\" & prefix & "-final.bmp"
 cleanup:
     If opened Then Close #f
