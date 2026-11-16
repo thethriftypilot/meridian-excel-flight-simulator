@@ -1,5 +1,5 @@
 MERIDIAN / NATIVE EXCEL VBA TEST RUN
-2026-11-10 23:24:42
+2026-11-16 14:43:10
 PASS | A Compilation | Native VBA execution reached test runner
 PASS | Review perfect rubric
 PASS | Review rubric bounded
@@ -68,17 +68,17 @@ PASS | D Pause | Short P event retained
 PASS | D Resume | Second P resumes
 PASS | D Engine off | E cuts engine
 PASS | D Engine restart | E restarts with fuel available
-PASS | L Benchmark | 120 frames: 16.51 FPS; terrain 55.83 ms; panel 3.22 ms. Uncapped native renderer, balanced.
-PASS | L Performance preset | 120 frames: 26.70 FPS; uncapped with 2-column spans
-PASS | L Moving map | Performance preset + map: 26.13 FPS over 30 frames
+PASS | L Benchmark | 120 frames: 15.56 FPS; terrain 59.37 ms; panel 3.34 ms. Uncapped native renderer, balanced.
+PASS | L Performance preset | 120 frames: 24.62 FPS; uncapped with 2-column spans
+PASS | L Moving map | Performance preset + map: 25.21 FPS over 30 frames
 PASS | H Camera/weather matrix | All 5 views x 7 weather presets rendered; banked cockpit and instrument captures saved
 PASS | Detailed landscape | Full-resolution OpenGL frame
-PASS | Detailed benchmark | 58.46 FPS, 120 full-resolution chase frames
+PASS | Detailed benchmark | 52.83 FPS, 120 full-resolution chase frames
 PASS | Detailed camera and weather matrix | 35 combinations without software fallback
-PASS | Approach quality 0 | 32.64 uncapped FPS, matched 90-frame approach
-PASS | Approach quality 1 | 19.56 uncapped FPS, matched 90-frame approach
-PASS | Approach quality 2 | 43.85 uncapped FPS, matched 90-frame approach
-PASS | Approach quality 3 | 27.21 uncapped FPS, matched 90-frame approach
+PASS | Approach quality 0 | 32.09 uncapped FPS, matched 90-frame approach
+PASS | Approach quality 1 | 19.20 uncapped FPS, matched 90-frame approach
+PASS | Approach quality 2 | 41.73 uncapped FPS, matched 90-frame approach
+PASS | Approach quality 3 | 26.02 uncapped FPS, matched 90-frame approach
 PASS | Region FAA runway count
 PASS | Region Richmond primary length
 PASS | Region Hanover location
@@ -116,7 +116,7 @@ PASS | I Menu audio | Original WAV accepted by asynchronous PlaySoundW
 PASS | I Audio events | Startup and touchdown cues reached original PCM mixer
 PASS | B/J Launch 2 | Native UserForm, terrain and cockpit presented
 PASS | B/J Launch 3 | Native UserForm, terrain and cockpit presented
-PASS | K GDI cleanup | 3 cycles: before=450 after=446; includes Office UserForm cache
+PASS | K GDI cleanup | 3 cycles: before=445 after=447; includes Office UserForm cache
 PARTIAL | D Physical controls | Queued native control tests passed if reported above; UI pause/resume checked separately; sustained physical piloting not fully tested
 PARTIAL | H Instruments | All 13 displayed bindings checked through framebuffer changes; independent calibration against aircraft data not performed
 

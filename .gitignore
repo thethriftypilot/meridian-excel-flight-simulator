@@ -24,3 +24,17 @@ ExcelFlightSimulator/Assets/Region/*.rgba
 ExcelFlightSimulator/Assets/Region/*.rgb
 ExcelFlightSimulator/Assets/Region/*.tif
 ExcelFlightSimulator/Assets/Region/*.jpg
+
+.baseline-v07/
+ExcelFlightSimulator/Assets/ExtremeCandidate/
+
+ExtremeCandidates/
+
+# Retain matched baseline/final PNGs, not repeated transient framebuffer dumps.
+ExcelFlightSimulator/Tests/**/*.bmp
+ExcelFlightSimulator/Tests/extreme-assets/
+ExcelFlightSimulator/Tests/extreme-cockpit/
+ExcelFlightSimulator/Tests/extreme-refined/
+ExcelFlightSimulator/Tests/extreme-buildings/
+ExcelFlightSimulator/Tests/extreme-cached-airports/
+ExcelFlightSimulator/Tests/extreme-1280/*.bmp

@@ -262,6 +262,7 @@ End Function
 
 Private Sub CapturePixels(ByRef data() As Long)
     Dim info As BITMAPINFOHEADER, bmp As LongPtr, scratch As LongPtr, rows As Long
+    If DirectGPU Then CaptureGPU
     ReDim data(0 To 699999)
     info.biSize = 40: info.biWidth = 1000: info.biHeight = -700
     info.biPlanes = 1: info.biBitCount = 32: info.biSizeImage = 2800000

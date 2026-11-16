@@ -1,4 +1,8 @@
-# MERIDIAN — the Excel flight experiment
+# MERIDIAN â€” the Excel flight experiment
+
+## Extreme development build
+
+Select **Extreme GPU** for direct presentation and the new cockpit/scenery. H toggles the interface, C changes camera, and +/= or - adjusts field of view. [Evidence and limitations](EXTREME_STATUS.md). This is a development milestone, not completion of the 10/10 challenge.
 
 ## v0.7 update
 
@@ -14,7 +18,7 @@ An experimental, native VBA flight simulator for 64-bit Windows desktop Excel. T
 
 3. Click **OPEN FLIGHT SIMULATOR**, then **START FLIGHT** or **WATCH DEMONSTRATION**.
 
-4. For the easiest introduction, use **Richmond scenic flight**, **Clear / calm**, and **Detailed 3D**. Demonstration mode flies the same physics model with an automatic controller.
+4. For the easiest introduction, use **Richmond scenic flight**, **Clear / calm**, and **Extreme GPU**. Demonstration mode flies the same physics model with an automatic controller.
 
 5. Press **Esc** to return to the menu. Close the menu to return to Excel.
 
@@ -28,7 +32,7 @@ Choose runway departure. Hold W to advance power. At approximately 55 knots, hol
 
 For landing practice, choose runway 15 approach. The aircraft starts northwest of KFCI, about 2.5 km before the threshold, at 66 knots with flaps extended. Adjust power with W/S, align using bank and rudder, reduce descent near the surface, and brake with Space after landing. Contact faster than 3.2 m/s vertically, excessive attitude, or fast off-runway contact ends the flight.
 
-The terrain ends roughly 10 km from the airport in each cardinal direction. The simulator pauses before crossing its boundary; reset or turn back. There is no streaming world beyond this local package.
+The packaged region covers an 81.92 km square centered near KFCI. The original high-detail area is about 20.48 km square; KRIC and KOFP have separate detail patches. There is no streaming world beyond this package.
 
 The airport includes a generalized apron, taxiway and collidable hangars; the chase camera shows an original 3D low-wing aircraft. Try the crosswind approach or rain preset after learning the basic controls. Press E to shut down or restart the engine when fuel is available.
 

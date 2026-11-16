@@ -32,6 +32,7 @@ Private Sub UserForm_Initialize()
     btnReplay.Font.name = "Segoe UI": btnReplay.Font.size = 13
     btnDebrief.Font.name = "Segoe UI": btnDebrief.Font.size = 13
     lblHint.Font.name = "Segoe UI": lblHint.Font.size = 10
+    lblCredits.Font.name = "Segoe UI": lblCredits.Font.size = 9
     btnClose.Font.name = "Segoe UI": btnClose.Font.size = 10
 
     If Len(Dir(ThisWorkbook.path & "\Assets\Terrain\menu.bmp")) > 0 Then imgTerrain.Picture = LoadPicture(ThisWorkbook.path & "\Assets\Terrain\menu.bmp")
@@ -64,7 +65,7 @@ Private Sub UserForm_Initialize()
         .AddItem "Rain / reduced visibility"
         .ListIndex = 0
     End With
-    cboQuality.AddItem "Performance": cboQuality.AddItem "Balanced": cboQuality.AddItem "Detailed 3D": cboQuality.AddItem "Detailed 3D / 2x": cboQuality.ListIndex = 2
+    cboQuality.AddItem "Performance": cboQuality.AddItem "Balanced": cboQuality.AddItem "Detailed 3D": cboQuality.AddItem "Detailed 3D / 2x": cboQuality.AddItem "Extreme GPU": cboQuality.ListIndex = 4
     cboVolume.AddItem "Muted": cboVolume.AddItem "Low": cboVolume.AddItem "Normal": cboVolume.ListIndex = 2
     cboSensitivity.AddItem "Gentle": cboSensitivity.AddItem "Normal": cboSensitivity.AddItem "Direct": cboSensitivity.ListIndex = 1
 End Sub
@@ -80,6 +81,7 @@ Private Sub ConfigureFlight()
     If Scenario = 5 Then SetWeather 4
     If Scenario = 7 Then SetWeather 2
     quality = cboQuality.ListIndex
+    CacheGeometry = (quality >= 2): CleanView = (quality = 4): ViewZoom = 1
     Volume = cboVolume.ListIndex * 0.325
     Muted = (Volume = 0)
     Sensitivity = 0.5 + cboSensitivity.ListIndex * 0.3

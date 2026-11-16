@@ -38,10 +38,10 @@ All arrays are row-major, top row north, left column west, little-endian, with n
 
 | File | Layout |
 |---|---|
-| height.bin | 1024Ã—1024 IEEE754 float32 metres NAVD88 |
-| color.bin | 4096Ã—4096 uint32 0x00RRGGBB (disk bytes B,G,R,0) |
-| color-lod1.bin | 1024Ã—1024 uint32 box-filtered color |
-| color-lod2.bin | 256Ã—256 uint32 box-filtered color |
+| height.bin | 1024Ãƒâ€”1024 IEEE754 float32 metres NAVD88 |
+| color.bin | 4096Ãƒâ€”4096 uint32 0x00RRGGBB (disk bytes B,G,R,0) |
+| color-lod1.bin | 1024Ãƒâ€”1024 uint32 box-filtered color |
+| color-lod2.bin | 256Ãƒâ€”256 uint32 box-filtered color |
 
 No ellipsoid/geoid conversion is applied. Aircraft MSL and terrain altitude share the local orthometric reference. Do not mix GPS ellipsoidal heights into this data without conversion.
 
@@ -73,4 +73,27 @@ This opens an isolated Excel instance, runs the real renderer/audio/60 Hz physic
 After a successful continuous diagnostic, `python .\Tools\Build\plot_soak.py` creates Tests/soak-performance.svg from the raw measurements. `python .\Tools\Build\package.py` generates PACKAGE_SHA256.json and the complete ZIP, then checks every archive entry CRC.
 
 
-The v0.6 ZIP includes the ready-to-use Detailed 3D assets. To regenerate them from source, prepare the original terrain first, then run `build_landscape.py`, `build_airframe.py` and `build_windshield.py` in `Tools/TerrainProcessing` with Python, NumPy, Pillow and SciPy installed. The landscape builder fetches four USGS NAIP tiles and retains their source URLs in `Assets/Landscape/source.json`. Use `Tools/Build/run-soak.ps1 -Seconds 120 -Detailed` to repeat the graphics stress test, or replace `-Detailed` with `-Supersample` to test the 2× mode.
+The v0.6 ZIP includes the ready-to-use Detailed 3D assets. To regenerate them from source, prepare the original terrain first, then run `build_landscape.py`, `build_airframe.py` and `build_windshield.py` in `Tools/TerrainProcessing` with Python, NumPy, Pillow and SciPy installed. The landscape builder fetches four USGS NAIP tiles and retains their source URLs in `Assets/Landscape/source.json`. Use `Tools/Build/run-soak.ps1 -Seconds 120 -Detailed` to repeat the graphics stress test, or replace `-Detailed` with `-Supersample` to test the 2Ã— mode.
+
+## Extreme graphics milestone
+
+Release packages include all baked assets. To regenerate original graphics with NumPy, SciPy and Pillow installed, run from the simulator directory:
+
+```powershell
+python Tools/TerrainProcessing/build_airframe.py --output Assets/Landscape/airframe.f32
+python Tools/TerrainProcessing/build_landscape.py --output Assets/Landscape
+python Tools/TerrainProcessing/build_atmosphere.py --output Assets/Graphics
+```
+
+Building reproduction and ODbL input extract are documented in `Assets/Landscape/BUILDINGS-LICENSE.md`. Preserve source assets before regenerating; scenery generators replace their output files. The full regional assets from v0.7 remain required.
+
+Native validation commands, with the workbook closed:
+
+```powershell
+& Tools/Build/build.ps1 -Test
+& Tools/Build/capture-showcase.ps1 -Label extreme-final -GPUChecks
+& Tools/Build/capture-showcase.ps1 -Label extreme-1280 -Width 1280
+& Tools/Build/run-soak.ps1 -Seconds 1200 -Direct
+```
+
+The 1280-width run renders an actual 1280 × 896 viewport to preserve the existing aspect ratio. Native screenshots are deliberately resampled into the 1000 × 700 capture canvas; benchmark CSVs record the real framebuffer dimensions. Do not call the saved BMP resolution the native rendering resolution. The soak uses automatic controls and intentionally runs without foreground focus; it does not establish manual handling quality.

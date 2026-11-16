@@ -1,0 +1,57 @@
+# Meridian Extreme: rendering architecture investigation
+
+Status: source/API review, not an executed prototype or benchmark. Baseline reviewed: v0.7.0 (`07a0f45`). Recommendations require native Excel validation before becoming release claims.
+
+## Largest practical architectural change
+
+Implement direct WGL presentation in an owned child window and retain the readback and software paths. Composite cockpit/HUD in OpenGL. This removes the world framebuffer readback, GDI transfer and final StretchBlt from ordinary GPU frames. It does not automatically improve scene assets or guarantee a frame-rate gain: compare matched scenes on the same hardware.
+
+### What the current code actually does
+
+- `modLandscape.Setup` creates a hidden popup using the built-in `STATIC` class. It chooses a double-buffered pixel format (`pfd(4)=37`), 32-bit color, 24-bit depth and 8-bit stencil, renders into GL_BACK, and allocates a CPU output array.
+- Textures are uploaded once per context, but terrain/tree/airframe arrays remain client-side VBA arrays submitted through `glInterleavedArrays`/`glDrawArrays` each frame. This is not proof that meshes reside persistently in GPU memory.
+- `FinishLandscape` calls `glReadPixels`, transfers every completed world frame through `StretchDIBits`, and restores the previous WGL context. The 2x preset reads 2000×1400 pixels and GDI-downsamples to 1000×700.
+- `RenderFrame` then draws the panel, map, HUD, mission text, pause overlay and rain into the GDI canvas. `Present` stretches that canvas into the UserForm DC.
+- Cockpit masks and UI are the integration constraint. Rendering the world into a visible child while continuing to paint the parent cannot place the parent's GDI overlays reliably above that child.
+- Keyboard held state uses `GetAsyncKeyState`; toggles depend on `UserForm_KeyDown` events. A focused native child can therefore break toggles even when held axes keep working.
+
+## Recommended implementation B
+
+1. Register a dedicated Unicode window class with `CS_OWNDC`; use the native `DefWindowProcW` address from `GetProcAddress` as its window procedure. This avoids a VBA callback or subclass whose lifetime could outlive a reset project. Set no background brush; the render loop repaints the complete child, including while paused. Validate `LenB(WNDCLASSEXW)=80` on x64. `cbSize/style/cbClsExtra/cbWndExtra` are 32-bit; procedure, handles and string pointers are `LongPtr`. Keep the class name alive across registration; use `StrPtr` with Unicode APIs. Register once per owned lifecycle and unregister only after destroying all its windows. [WNDCLASSEXW contract](https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-wndclassexw).
+2. Create a child of `SimHwnd` with `WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS`, not a detached top-level simulator. Do not modify Excel's process-wide DPI awareness. Resize through the host's current client pixel rectangle, maintaining aspect ratio/letterboxing until a genuine widescreen camera is implemented. Get a persistent DC for this child. Avoid tab-stop style and unnecessary focus capture.
+3. Request and inspect the pixel format: `PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER`, RGBA, depth24, stencil8. Use `DescribePixelFormat` to verify what was actually selected and log generic/software status. Set the format once per child; changing rendering format requires recreating the child. Microsoft requires clipping styles and forbids a `CS_PARENTDC` window class; do not assume the stock STATIC class is suitable without querying its class flags. [SetPixelFormat contract](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-setpixelformat).
+4. Create/make-current WGL context and upload assets. Retain previous DC/context before entering render work and restore before yielding via `DoEvents`. Keep GL work on Excel's owning thread. A context can be current to only one thread, and activation failure clears the current context; check every activation result. [wglMakeCurrent contract](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-wglmakecurrent).
+5. Draw the world, windshield and overlay layers into the back buffer, then call `SwapBuffers(dc)`. Check its Boolean result. Do not mix GDI drawing into the OpenGL child or assume the back buffer preserves previous contents. Swap presents the double-buffered drawable; it is not an accurate standalone GPU execution timer. [SwapBuffers contract](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-swapbuffers).
+6. On failure: hide/destroy the child and restore the readback or software presentation path. On exit: detach/restore WGL context, delete owned context, release DC, destroy child, then unregister owned class. Never delete Excel's previous context. Keep cleanup idempotent and call it on initialization failures as well as normal exit. Do not use VBA `End`.
+
+### Overlay bridge: safest first integration
+
+Keep existing instrument drawing logic, but render it into an explicitly owned 32-bit DIB section with a known background key. Upload only overlay pixels or rectangular overlay regions into an existing GL texture using `glTexSubImage2D`; draw an orthographic quad over the world. Convert keyed pixels to alpha zero and visible pixels to alpha255, or keep an explicit alpha mask. GDI generally does not populate alpha correctly, so never trust its fourth byte. Whole-frame CPU alpha conversion can cost several milliseconds in VBA: benchmark a full overlay against fixed rectangles (panel, HUD, map, banners). Avoid leaking the key into anti-aliased text edges. A future all-GL gauge/text atlas avoids that conversion and unnecessary upload entirely.
+
+This bridge still transfers CPU UI pixels to the GPU. Its benefit is specifically avoiding the synchronous GPU-world-to-CPU transfer and GDI presentation, not eliminating every transfer. For visual regression screenshots, request a readback explicitly after composition; screenshot-only readbacks must be excluded from normal frame-rate measurements.
+
+### Keyboard and lifecycle details
+
+Poll rising edges from `GetAsyncKeyState` as well as UserForm events, de-duplicating presses. Clear edge/held/pulse state on focus loss, neutralize controls, and prevent a held toggle from retriggering on focus regain. `GetForegroundWindow` normally returns the top-level form even when a child has focus; verify clicks, tab traversal, Alt+Tab, Escape, pause, close-button and task switching natively. Keep form QueryClose's shutdown request; destroy graphics resources before unloading the form. A default native procedure does not implement custom repaint or resize notifications, so the existing loop must detect size changes and repaint while paused; minimize/zero-size should skip presentation safely.
+
+## Safe acceleration without extension invocation
+
+Compare static client arrays with OpenGL display lists. They are exported OpenGL functions callable through normal `Declare PtrSafe`, so no arbitrary function-pointer invocation is required. Compile per-terrain tile/tree cluster for culling, regional patches and static aircraft sections. `glInterleavedArrays` changes client state immediately; `glDrawArrays` inside a list captures the referenced array data at compilation. Keep changing lighting/transforms outside lists. Driver storage and GPU residency are implementation-dependent; call them driver-managed cached geometry rather than asserting VBO residency. Measure upload/startup time and working set as well as frame cost. [Display-list behavior](https://learn.microsoft.com/en-us/windows/win32/opengl/glnewlist), [array-data capture](https://learn.microsoft.com/en-us/windows/win32/opengl/gldrawarrays).
+
+## Modern OpenGL: exact current obstacle
+
+Windows OpenGL extension entrypoints require `wglGetProcAddress` with the intended context current. Their addresses are pixel-format/context dependent. A valid pointer neither declares its ABI nor provides a VBA call expression. Store handles/pointers as `LongPtr`, reject invalid results and resolve again for a recreated context. [Microsoft extension contract](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-wglgetprocaddress), [Khronos Windows guidance](https://wikis.khronos.org/opengl/Platform_specifics%3A_Windows).
+
+VBOs, FBOs, modern shaders, VAOs and instancing are not safely gained by writing `Declare ... Lib "opengl32"` for unexported driver functions. `DispCallFunc` is documented as an Automation invocation helper with typed argument metadata. The official page does not establish the commonly copied null-instance/arbitrary-address trick as a supported OpenGL dispatch contract. Do not promote that pattern, fabricated COM vtables, machine-code trampolines or callback-signature abuse into this release without a separately justified ABI validation. This is an invocation-validation obstacle, not proof that modern GL is impossible from VBA. [DispCallFunc contract](https://learn.microsoft.com/en-us/windows/win32/api/oleauto/nf-oleauto-dispcallfunc).
+
+Direct SwapBuffers, texture atlases, display lists, alpha-tested billboard vegetation, fixed-function directional lighting, mipmaps and depth-correct scenery remain viable through exported APIs. Existing anisotropy/mipmap token use must be capability-checked; it does not need an extension function pointer. Hardware MSAA pixel-format selection and swap-interval control require further verified WGL dispatch, so do not claim them from ordinary pixel-format flags or a fast swap.
+
+## Experiment and decision gate
+
+Run three modes at identical scene state and output dimensions: A readback+GDI, B child-window SwapBuffers+composited UI, C software fallback. Record native framebuffer resolution separately from on-screen dimensions; software480 rendering is not quality-equivalent to1000/1280 rendering. Test current1000×700 first, then1280×720 and1920×1080 as independent cases with correct camera aspect.
+
+Use eight frozen reference scenes and one deterministic 120-second flight. Warm assets for at least five seconds, then record per-frame timestamp, physics cost, scene preparation, GL submission, readback, overlay preparation/upload, presentation, total frame interval and actual output dimensions. Report average FPS, median/p95/p99/worst frame interval, working set, GDI/USER handles, resource-create/delete counts and context renderer/version. Alternate A/B order to reduce warm-up bias; retain raw CSVs and computer/display/driver details.
+
+Submission timings measure CPU command queuing. Add a separate diagnostic run with `glFinish` before/after scene submission to estimate completed rendering plus driver synchronization, explicitly noting that forced serialization changes pipeline behavior. Do not insert `glFinish` into the shipped path just to make submission timings easier to interpret. Swap time can include refresh/compositor waits; log display refresh and do not interpret low swap time as completed GPU work. Screen capture is outside timed samples.
+
+Accept B only if matched images remain correct, frame pacing improves or supports materially greater visual quality, and repeated create/resize/minimize/restore/focus/close cycles pass without leaked windows, stale contexts, flicker or broken controls. Preserve A as a compatibility and capture path and C as the non-OpenGL fallback. A 20-minute flight plus repeated launch/close cycles is a release gate, not something a short benchmark substitutes for.

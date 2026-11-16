@@ -1,5 +1,8 @@
 Attribute VB_Name = "modRender"
 Option Explicit
+Private Declare PtrSafe Function CreateDIBSection Lib "gdi32" (ByVal hdc As LongPtr, ByRef info As BITMAPINFOHEADER, ByVal usage As Long, ByRef bits As LongPtr, ByVal section As LongPtr, ByVal offset As Long) As LongPtr
+Public CleanView As Boolean, ViewZoom As Double
+Public CanvasBits As LongPtr
 Public SimHwnd As LongPtr, Canvas As LongPtr
 Private windowDC As LongPtr, sceneDC As LongPtr, canvasBitmap As LongPtr, sceneBitmap As LongPtr
 Private oldCanvas As LongPtr, oldScene As LongPtr
@@ -19,9 +22,13 @@ Public TerrainMS As Double, PanelMS As Double, FPS As Double
 Public Sub InitRenderer(ByVal hwnd As LongPtr)
     If hwnd = 0 Then Err.Raise 5, , "Flight window not found"
     SimHwnd = hwnd: windowDC = GetDC(hwnd)
+    If ViewZoom = 0 Then ViewZoom = 1
     If windowDC = 0 Then Err.Raise 5, , "Cannot acquire simulator DC"
     Canvas = CreateCompatibleDC(windowDC): sceneDC = CreateCompatibleDC(windowDC)
-    canvasBitmap = CreateCompatibleBitmap(windowDC, 1000, 700)
+    Dim canvasInfo As BITMAPINFOHEADER
+    canvasInfo.biSize = 40: canvasInfo.biWidth = 1000: canvasInfo.biHeight = -700
+    canvasInfo.biPlanes = 1: canvasInfo.biBitCount = 32
+    canvasBitmap = CreateDIBSection(windowDC, canvasInfo, 0, CanvasBits, 0, 0)
     sceneBitmap = CreateCompatibleBitmap(windowDC, 480, 480)
     If Canvas = 0 Or sceneDC = 0 Or canvasBitmap = 0 Or sceneBitmap = 0 Then Err.Raise 7, , "GDI allocation failed"
     oldCanvas = SelectObject(Canvas, canvasBitmap): oldScene = SelectObject(sceneDC, sceneBitmap)
@@ -104,6 +111,7 @@ End Sub
 Public Sub RenderFrame(Optional ByVal menu As Boolean = False)
     Dim t As Double, p(0 To 2) As POINTAPI, i As Long, px As Double, py As Double
     t = Clock(): Camera
+    If Quality = 4 Then Box Canvas, 0, 0, 1000, 700, RGB(13, 26, 32)
     Dim detailed As Boolean
     If Quality >= 2 Then detailed = StartLandscape(camE, camN, camAlt, camYaw, camPitch, camBank)
     If Quality >= 2 And Not detailed Then
@@ -114,7 +122,7 @@ Public Sub RenderFrame(Optional ByVal menu As Boolean = False)
         SceneryPixels = 0
         Airport
         DrawAirportObjects
-        DrawRegionalAirports
+        If CacheGeometry Then DrawCachedRegionalAirports Else DrawRegionalAirports
         DrawAircraftShadow
         If CameraMode = 2 Then DrawDetailedAircraft
         FinishLandscape
@@ -160,6 +168,7 @@ Public Sub RenderFrame(Optional ByVal menu As Boolean = False)
         End If
     End If
     PanelMS = (Clock() - t) * 1000
+    If DirectGPU Then CompositeGPU menu
 End Sub
 Private Sub RenderTerrain()
     Dim x As Long, y As Long, index As Long, c As Long, py As Long, oldY As Long
@@ -370,6 +379,10 @@ Public Sub Present()
     Dim r As RECT, w As Long, h As Long, viewScale As Double
     Dim x As Long, y As Long, margin As Long
     If SimHwnd = 0 Then Exit Sub
+    If DirectGPU Then
+        PresentGPU
+        Exit Sub
+    End If
     GetClientRect SimHwnd, r
     viewScale = r.Right / 1000
     If r.Bottom / 700 < viewScale Then viewScale = r.Bottom / 700
@@ -385,16 +398,18 @@ Public Sub Present()
     StretchBlt windowDC, x, y, w, h, Canvas, 0, 0, 1000, 700, SRCCOPY
 End Sub
 Private Sub DrawHUD()
+    If Not CleanView Then
     Box Canvas, 0, 0, 1000, 34, RGB(13, 26, 32)
     DrawText Canvas, 16, 8, "MERIDIAN", 0, RGB(106, 211, 197)
     DrawText Canvas, 230, 8, Format(Plane.speed * 1.94384, "0") & " KT   " & Format(Plane.altitude * 3.28084, "0") & " FT   " & Format(Wrap(Plane.heading) * 180 / PI, "000") & " TRUE"
     DrawText Canvas, 690, 8, Format(FPS, "0.0") & " FPS  |  " & IIf(Demo, "DEMONSTRATION", "MANUAL FLIGHT")
     Box Canvas, 414, 34, 172, 24, RGB(15, 28, 34)
     DrawText Canvas, 429, 39, "COMPASS " & Format(Wrap(Plane.heading + 10 * PI / 180) * 180 / PI, "000") & " M", 0, RGB(232, 217, 163)
+    End If
     If Not Plane.engineRunning Then DrawText Canvas, 25, 65, "ENGINE OFF / E RESTART", 0, RGB(255, 175, 80)
     If Plane.stalled Then DrawText Canvas, 410, 65, "STALL", 2, RGB(255, 127, 66)
     If Plane.speed > 82 Then DrawText Canvas, 390, 65, "OVERSPEED", 2, RGB(255, 127, 66)
-    If CameraMode <> 0 And CameraMode <> 4 Then
+    If Not CleanView And CameraMode <> 0 And CameraMode <> 4 Then
         Box Canvas, 0, 654, 1000, 46, RGB(13, 26, 32)
         DrawText Canvas, 24, 670, "W/S POWER   ARROWS FLY   F FLAPS   C CAMERA   M MAP   P PAUSE   ESC MENU"
     End If

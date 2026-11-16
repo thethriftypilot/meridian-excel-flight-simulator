@@ -42,7 +42,7 @@ try {
     [void](Add-Control 'Label' 'lblTitle' 'MERIDIAN' 28 18 420 52 36)
     [void](Add-Control 'Label' 'lblSub' 'THE EXCEL FLIGHT EXPERIMENT' 30 77 500 24 12 12963447)
     [void](Add-Control 'Label' 'lblRegion' 'VIRGINIA / KFCI    |    PIPER PA-28-161 WARRIOR II' 30 108 650 25 13)
-    [void](Add-Control 'Label' 'lblAbout' "Real USGS elevation. Aerial imagery. Every flight computed in VBA.`r`nExplore 420 square kilometres around Richmond Executive." 30 147 680 50 13)
+    [void](Add-Control 'Label' 'lblAbout' "Real USGS elevation. Aerial imagery. Every flight computed in VBA.`r`nFly the Richmond region: KFCI, KRIC and KOFP." 30 147 680 50 13)
     $img=$menu.Designer.Controls.Add('Forms.Image.1','imgTerrain',$true)
     $img.Left=480; $img.Top=212; $img.Width=230; $img.Height=180; $img.PictureSizeMode=3
     # Picture embedded in form by Excel during build; runtime needs no image decoder.
@@ -62,7 +62,8 @@ try {
     [void](Add-Control 'CommandButton' 'btnDemo' 'WATCH DEMONSTRATION' 360 414 350 48 16 15198183 4274474)
     [void](Add-Control 'CommandButton' 'btnReplay' 'REPLAY LAST FLIGHT' 30 474 310 38 13 15198183 4274474)
     [void](Add-Control 'CommandButton' 'btnDebrief' 'VIEW DEBRIEF' 360 474 350 38 13 15198183 4274474)
-    [void](Add-Control 'Label' 'lblHint' 'v0.7 / N destination / M map / Arrows fly / W S power / P pause / Esc menu.' 30 535 690 22 10 11908508)
+    [void](Add-Control 'Label' 'lblHint' 'Extreme preview / H interface / +/- zoom / Arrows fly / W S power / Esc menu.' 30 535 690 22 10 11908508)
+    [void](Add-Control 'Label' 'lblCredits' '(c) OpenStreetMap contributors / ODbL: openstreetmap.org/copyright' 30 562 690 18 9 11908508)
     [void](Add-Control 'CommandButton' 'btnClose' 'EXIT' 660 18 60 26 10 15198183 4274474)
     $menuCode=[IO.File]::ReadAllText((Join-Path $root 'Source/VBA/frmMenu.code'))
     $menuCode=$menuCode.Replace('Private Sub UserForm_Initialize()',"Private Sub UserForm_Initialize()`r`n$script:fontCode")
